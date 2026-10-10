@@ -1,0 +1,6121 @@
+openapi: 3.0.3
+info:
+  title: Подход API
+  version: 1.0.0
+  description:
+    Принятый контракт EGO-18. Приватная mobile-first PWA; реализация маршрутов выполняется
+    по этапам. JSON body <= 1 MiB, commands <= 50. Даты календаря локальные, timestamp UTC. План и
+    факты разделены.
+  license:
+    name: Private
+servers:
+  - url: /
+    description: Same origin
+tags:
+  - name: Auth
+    description: Auth
+  - name: User
+    description: User
+  - name: Exercises
+    description: Exercises
+  - name: Programs
+    description: Programs
+  - name: Workouts
+    description: Workouts
+  - name: Journal
+    description: Journal
+  - name: Progress
+    description: Progress
+  - name: Photos
+    description: Photos
+  - name: Push
+    description: Push
+  - name: Sync
+    description: Sync
+  - name: Health
+    description: Health
+security:
+  - session: []
+paths:
+  /api/v1/auth/email/request:
+    post:
+      operationId: requestEmailCode
+      tags:
+        - Auth
+      summary: requestEmailCode
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '202':
+          description: Принято; фоновая операция продолжается
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+  /api/v1/auth/email/verify:
+    post:
+      operationId: verifyEmailCode
+      tags:
+        - Auth
+      summary: verifyEmailCode
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                maxLength: 1000
+              description: __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
+        '400':
+          $ref: '#/components/responses/Error400'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailVerify'
+  /api/v1/auth/session:
+    get:
+      operationId: getSession
+      tags:
+        - Auth
+      summary: getSession
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      tags:
+        - Auth
+      summary: logout
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/me:
+    get:
+      operationId: getMe
+      tags:
+        - User
+      summary: getMe
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+    patch:
+      operationId: updateMe
+      tags:
+        - User
+      summary: updateMe
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatch'
+  /api/v1/me/devices:
+    get:
+      operationId: listDevices
+      tags:
+        - User
+      summary: listDevices
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevicePage'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/me/devices/{id}:
+    delete:
+      operationId: revokeDevice
+      tags:
+        - User
+      summary: revokeDevice
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/me/exports:
+    post:
+      operationId: createExport
+      tags:
+        - User
+      summary: createExport
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '202':
+          description: Принято; фоновая операция продолжается
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportAccepted'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/me/exports/{id}:
+    get:
+      operationId: getExport
+      tags:
+        - User
+      summary: getExport
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Export'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/me/deletion/request:
+    post:
+      operationId: requestAccountDeletion
+      tags:
+        - User
+      summary: requestAccountDeletion
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+      responses:
+        '202':
+          description: Принято; фоновая операция продолжается
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Challenge'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/me/deletion/confirm:
+    post:
+      operationId: confirmAccountDeletion
+      tags:
+        - User
+      summary: confirmAccountDeletion
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '202':
+          description: Принято; фоновая операция продолжается
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAccepted'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteConfirm'
+  /api/v1/exercises:
+    get:
+      operationId: listExercises
+      tags:
+        - Exercises
+      summary: listExercises
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 120
+        - name: includeArchived
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExercisePage'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+    post:
+      operationId: createExercise
+      tags:
+        - Exercises
+      summary: createExercise
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExercise'
+  /api/v1/exercises/{id}:
+    get:
+      operationId: getExercise
+      tags:
+        - Exercises
+      summary: getExercise
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+    patch:
+      operationId: updateExercise
+      tags:
+        - Exercises
+      summary: updateExercise
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExercisePatch'
+  /api/v1/programs:
+    get:
+      operationId: listPrograms
+      tags:
+        - Programs
+      summary: listPrograms
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: includeArchived
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramPage'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+    post:
+      operationId: createProgram
+      tags:
+        - Programs
+      summary: createProgram
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Program'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProgram'
+  /api/v1/programs/{id}:
+    get:
+      operationId: getProgram
+      tags:
+        - Programs
+      summary: getProgram
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Program'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/programs/{id}/revisions/{revisionId}:
+    get:
+      operationId: getProgramRevision
+      tags:
+        - Programs
+      summary: getProgramRevision
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: revisionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramRevision'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/programs/{id}/revisions:
+    post:
+      operationId: publishProgramRevision
+      tags:
+        - Programs
+      summary: publishProgramRevision
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Program'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRevision'
+  /api/v1/programs/{id}/copy-day:
+    post:
+      operationId: copyProgramDay
+      tags:
+        - Programs
+      summary: copyProgramDay
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Program'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopyDay'
+  /api/v1/programs/{id}/archive:
+    post:
+      operationId: archiveProgram
+      tags:
+        - Programs
+      summary: archiveProgram
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Program'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveProgram'
+  /api/v1/programs/{id}/exceptions/{sourceDate}:
+    put:
+      operationId: putScheduleException
+      tags:
+        - Programs
+      summary: putScheduleException
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sourceDate
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Program'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutException'
+    delete:
+      operationId: deleteScheduleException
+      tags:
+        - Programs
+      summary: deleteScheduleException
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sourceDate
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/workouts:
+    get:
+      operationId: listWorkouts
+      tags:
+        - Workouts
+      summary: listWorkouts
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - active
+              - completed
+              - discarded
+        - name: exerciseId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutPage'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+    post:
+      operationId: startWorkout
+      tags:
+        - Workouts
+      summary: startWorkout
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workout'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartWorkout'
+  /api/v1/workouts/active:
+    get:
+      operationId: getActiveWorkout
+      tags:
+        - Workouts
+      summary: getActiveWorkout
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+                allOf:
+                  - $ref: '#/components/schemas/Workout'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/workouts/{id}:
+    get:
+      operationId: getWorkout
+      tags:
+        - Workouts
+      summary: getWorkout
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workout'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/workouts/{id}/commands:
+    post:
+      operationId: commandWorkout
+      tags:
+        - Workouts
+      summary: commandWorkout
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResult'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkoutCommand'
+  /api/v1/workouts/{id}/revisions:
+    get:
+      operationId: listWorkoutRevisions
+      tags:
+        - Workouts
+      summary: listWorkoutRevisions
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutRevisionPage'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/workouts/{id}/revisions/{revisionId}:
+    get:
+      operationId: getWorkoutRevision
+      tags:
+        - Workouts
+      summary: getWorkoutRevision
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: revisionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutRevision'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/calendar:
+    get:
+      operationId: getCalendar
+      tags:
+        - Journal
+      summary: getCalendar
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]{4}-(0[1-9]|1[0-2])$
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Calendar'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/days/{date}:
+    get:
+      operationId: getDay
+      tags:
+        - Journal
+      summary: getDay
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Day'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/days/{date}/note:
+    put:
+      operationId: putDayNote
+      tags:
+        - Journal
+      summary: putDayNote
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DayNote'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteInput'
+    delete:
+      operationId: deleteDayNote
+      tags:
+        - Journal
+      summary: deleteDayNote
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/progress/exercises:
+    get:
+      operationId: listProgressExercises
+      tags:
+        - Progress
+      summary: listProgressExercises
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExercisePage'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/progress/exercises/{id}:
+    get:
+      operationId: getExerciseProgress
+      tags:
+        - Progress
+      summary: getExerciseProgress
+      description:
+        'Период <= 5 лет, <= 500 агрегированных точек; только current completed revisions.
+        Bucket: maxWeight=max, остальные=sum.'
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: metric
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - maxWeight
+              - completedSets
+              - totalReps
+              - volume
+        - name: bucket
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - session
+              - week
+              - month
+            default: session
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Progress'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/photos/uploads:
+    post:
+      operationId: reservePhotoUpload
+      tags:
+        - Photos
+      summary: reservePhotoUpload
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoUpload'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoUploadInput'
+  /api/v1/photos/{id}/upload-url:
+    post:
+      operationId: renewPhotoUpload
+      tags:
+        - Photos
+      summary: renewPhotoUpload
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoUpload'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoComplete'
+  /api/v1/photos/{id}/complete:
+    post:
+      operationId: completePhotoUpload
+      tags:
+        - Photos
+      summary: completePhotoUpload
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '202':
+          description: Принято; фоновая операция продолжается
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoComplete'
+  /api/v1/photos:
+    get:
+      operationId: listPhotos
+      tags:
+        - Photos
+      summary: listPhotos
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoPage'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/photos/{id}:
+    get:
+      operationId: getPhoto
+      tags:
+        - Photos
+      summary: getPhoto
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+    patch:
+      operationId: updatePhoto
+      tags:
+        - Photos
+      summary: updatePhoto
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoPatch'
+    delete:
+      operationId: deletePhoto
+      tags:
+        - Photos
+      summary: deletePhoto
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/photos/read-urls:
+    post:
+      operationId: getPhotoReadUrls
+      tags:
+        - Photos
+      summary: getPhotoReadUrls
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoReadUrls'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoReadInput'
+  /api/v1/reminders:
+    get:
+      operationId: getReminders
+      tags:
+        - Push
+      summary: getReminders
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderRule'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+    put:
+      operationId: putReminders
+      tags:
+        - Push
+      summary: putReminders
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderRule'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderInput'
+  /api/v1/push/config:
+    get:
+      operationId: getPushConfig
+      tags:
+        - Push
+      summary: getPushConfig
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushConfig'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/push/subscriptions:
+    post:
+      operationId: subscribePush
+      tags:
+        - Push
+      summary: subscribePush
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscribe'
+  /api/v1/push/subscriptions/{id}:
+    delete:
+      operationId: unsubscribePush
+      tags:
+        - Push
+      summary: unsubscribePush
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/push/test:
+    post:
+      operationId: testPush
+      tags:
+        - Push
+      summary: testPush
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '202':
+          description: Принято; фоновая операция продолжается
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushTestAccepted'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushTest'
+  /api/v1/sync/bootstrap:
+    post:
+      operationId: createBootstrap
+      tags:
+        - Sync
+      summary: createBootstrap
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '202':
+          description: Принято; фоновая операция продолжается
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bootstrap'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/sync/bootstrap/{id}:
+    get:
+      operationId: getBootstrapPage
+      tags:
+        - Sync
+      summary: getBootstrapPage
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BootstrapPage'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '410':
+          $ref: '#/components/responses/Error410'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/sync/changes:
+    get:
+      operationId: getChanges
+      tags:
+        - Sync
+      summary: getChanges
+      description:
+        'Нужен initialCursor из bootstrap или предыдущий nextCursor. Отсутствие cursor: 422
+        bootstrap_required. Повтор страницы безопасен по entityVersion.'
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Changes'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '410':
+          $ref: '#/components/responses/Error410'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/sync/commands:
+    post:
+      operationId: syncCommands
+      tags:
+        - Sync
+      summary: syncCommands
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncBatchResult'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncBatch'
+  /api/health:
+    get:
+      operationId: health
+      tags:
+        - Health
+      summary: health
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      security: []
+  /api/ready:
+    get:
+      operationId: ready
+      tags:
+        - Health
+      summary: ready
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      security: []
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: __Host-podhod_session
+      description: HttpOnly Secure SameSite=Lax Path=/; мутации проверяют Origin и X-CSRF-Token.
+  schemas:
+    User:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+        locale:
+          type: string
+          maxLength: 20
+      required:
+        - id
+        - version
+        - createdAt
+        - updatedAt
+        - email
+        - timezone
+        - locale
+    Device:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        label:
+          type: string
+          maxLength: 120
+          minLength: 1
+        lastSeenAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - version
+        - createdAt
+        - updatedAt
+        - label
+        - lastSeenAt
+        - revokedAt
+    DevicePage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+          maxItems: 100
+          minItems: 0
+        nextCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+          nullable: true
+      required:
+        - items
+        - nextCursor
+    EmailRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+      required:
+        - email
+    Challenge:
+      type: object
+      additionalProperties: false
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+        retryAfterSeconds:
+          type: integer
+          minimum: 0
+          maximum: 600
+      required:
+        - challengeId
+        - expiresAt
+        - retryAfterSeconds
+    EmailVerify:
+      type: object
+      additionalProperties: false
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          pattern: ^[0-9]{8}$
+        deviceLabel:
+          type: string
+          maxLength: 120
+          minLength: 1
+        deviceId:
+          type: string
+          format: uuid
+      required:
+        - challengeId
+        - code
+        - deviceLabel
+    Session:
+      type: object
+      additionalProperties: false
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        deviceId:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+        csrfToken:
+          type: string
+          maxLength: 256
+      required:
+        - user
+        - deviceId
+        - expiresAt
+        - csrfToken
+    UserPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+        locale:
+          type: string
+          maxLength: 20
+      minProperties: 1
+    DeleteConfirm:
+      type: object
+      additionalProperties: false
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          pattern: ^[0-9]{8}$
+      required:
+        - challengeId
+        - code
+    Export:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - queued
+            - ready
+            - failed
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        downloadUrl:
+          type: string
+          format: uri
+          maxLength: 4096
+          nullable: true
+      required:
+        - id
+        - status
+        - expiresAt
+        - downloadUrl
+    ExportAccepted:
+      type: object
+      additionalProperties: false
+      properties:
+        exportId:
+          type: string
+          format: uuid
+        statusUrl:
+          type: string
+          format: uri
+          maxLength: 4096
+      required:
+        - exportId
+        - statusUrl
+    DeleteAccepted:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+            - deleting
+      required:
+        - status
+    TechniqueGuide:
+      type: object
+      additionalProperties: false
+      properties:
+        body:
+          type: string
+          maxLength: 10000
+        sourceTitle:
+          type: string
+          maxLength: 120
+          minLength: 1
+        sourceUrl:
+          type: string
+          format: uri
+          maxLength: 4096
+        reviewedAt:
+          type: string
+          format: date-time
+        sourceAccessedAt:
+          type: string
+          format: date-time
+      required:
+        - body
+        - sourceTitle
+        - sourceUrl
+        - reviewedAt
+        - sourceAccessedAt
+    Exercise:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+        note:
+          type: string
+          maxLength: 10000
+        archivedAt:
+          type: string
+          format: date-time
+          nullable: true
+        techniqueGuide:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/TechniqueGuide'
+      required:
+        - id
+        - version
+        - createdAt
+        - updatedAt
+        - name
+        - note
+        - archivedAt
+        - techniqueGuide
+    ExercisePage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Exercise'
+          maxItems: 100
+          minItems: 0
+        nextCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+          nullable: true
+      required:
+        - items
+        - nextCursor
+    CreateExercise:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+        note:
+          type: string
+          maxLength: 10000
+      required:
+        - id
+        - name
+    ExercisePatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+        note:
+          type: string
+          maxLength: 10000
+        archived:
+          type: boolean
+      minProperties: 1
+    Target:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+          minimum: 1
+          maximum: 100
+        weightKg:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,4})\.[0-9]{2}$
+          description: Килограммы, decimal с двумя знаками; от 0.00 до 99999.99.
+          nullable: true
+        repsMin:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        repsMax:
+          type: integer
+          minimum: 1
+          maximum: 1000
+      required:
+        - id
+        - position
+        - weightKg
+        - repsMin
+        - repsMax
+    PlanExerciseInput:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        exerciseId:
+          type: string
+          format: uuid
+        position:
+          type: integer
+          minimum: 1
+          maximum: 100
+        note:
+          type: string
+          maxLength: 10000
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Target'
+          maxItems: 100
+          minItems: 1
+      required:
+        - id
+        - exerciseId
+        - position
+        - note
+        - targets
+    PlanExercise:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        exerciseId:
+          type: string
+          format: uuid
+        position:
+          type: integer
+          minimum: 1
+          maximum: 100
+        note:
+          type: string
+          maxLength: 10000
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Target'
+          maxItems: 100
+          minItems: 1
+        nameSnapshot:
+          type: string
+          maxLength: 120
+          minLength: 1
+      required:
+        - id
+        - exerciseId
+        - position
+        - note
+        - targets
+        - nameSnapshot
+    ProgramDayInput:
+      type: object
+      additionalProperties: false
+      properties:
+        weekday:
+          type: integer
+          minimum: 1
+          maximum: 7
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanExerciseInput'
+          maxItems: 100
+          minItems: 1
+      required:
+        - weekday
+        - exercises
+    ProgramDay:
+      type: object
+      additionalProperties: false
+      properties:
+        weekday:
+          type: integer
+          minimum: 1
+          maximum: 7
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanExercise'
+          maxItems: 100
+          minItems: 1
+      required:
+        - weekday
+        - exercises
+    ProgramRevisionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        effectiveFrom:
+          type: string
+          format: date
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProgramDayInput'
+          maxItems: 7
+          minItems: 1
+      required:
+        - startDate
+        - endDate
+        - effectiveFrom
+        - timezone
+        - days
+    ProgramRevision:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        programId:
+          type: string
+          format: uuid
+        revisionNo:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        createdAt:
+          type: string
+          format: date-time
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        effectiveFrom:
+          type: string
+          format: date
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProgramDay'
+          maxItems: 7
+          minItems: 1
+      required:
+        - id
+        - programId
+        - revisionNo
+        - createdAt
+        - startDate
+        - endDate
+        - effectiveFrom
+        - timezone
+        - days
+    ScheduleException:
+      type: object
+      additionalProperties: false
+      properties:
+        sourceDate:
+          type: string
+          format: date
+        action:
+          type: string
+          enum:
+            - cancel
+            - move
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+      required:
+        - sourceDate
+        - action
+        - targetDate
+    Program:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+        currentRevision:
+          $ref: '#/components/schemas/ProgramRevision'
+        archivedAt:
+          type: string
+          format: date-time
+          nullable: true
+        archivedFrom:
+          type: string
+          format: date
+          nullable: true
+        exceptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleException'
+          maxItems: 1000
+          minItems: 0
+      required:
+        - id
+        - version
+        - createdAt
+        - updatedAt
+        - name
+        - currentRevision
+        - archivedAt
+        - archivedFrom
+        - exceptions
+    ProgramPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Program'
+          maxItems: 100
+          minItems: 0
+        nextCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+          nullable: true
+      required:
+        - items
+        - nextCursor
+    CreateProgram:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+        revision:
+          $ref: '#/components/schemas/ProgramRevisionInput'
+      required:
+        - id
+        - name
+        - revision
+    PublishRevision:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        revision:
+          $ref: '#/components/schemas/ProgramRevisionInput'
+      required:
+        - expectedVersion
+        - revision
+    CopyDay:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        effectiveFrom:
+          type: string
+          format: date
+        sourceWeekday:
+          type: integer
+          minimum: 1
+          maximum: 7
+        targetWeekdays:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+            maximum: 7
+          maxItems: 6
+          minItems: 1
+          uniqueItems: true
+        replaceExisting:
+          type: boolean
+      required:
+        - expectedVersion
+        - effectiveFrom
+        - sourceWeekday
+        - targetWeekdays
+        - replaceExisting
+    ArchiveProgram:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        effectiveFrom:
+          type: string
+          format: date
+      required:
+        - expectedVersion
+        - effectiveFrom
+    MoveException:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        action:
+          type: string
+          enum:
+            - move
+        targetDate:
+          type: string
+          format: date
+      required:
+        - expectedVersion
+        - action
+        - targetDate
+    CancelException:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        action:
+          type: string
+          enum:
+            - cancel
+      required:
+        - expectedVersion
+        - action
+    PutException:
+      oneOf:
+        - $ref: '#/components/schemas/MoveException'
+        - $ref: '#/components/schemas/CancelException'
+      discriminator:
+        propertyName: action
+        mapping:
+          move: '#/components/schemas/MoveException'
+          cancel: '#/components/schemas/CancelException'
+    WorkoutSet:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        position:
+          type: integer
+          minimum: 1
+          maximum: 100
+        plannedWeightKg:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,4})\.[0-9]{2}$
+          description: Килограммы, decimal с двумя знаками; от 0.00 до 99999.99.
+          nullable: true
+        plannedRepsMin:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          nullable: true
+        plannedRepsMax:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          nullable: true
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - skipped
+        actualWeightKg:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,4})\.[0-9]{2}$
+          description: Килограммы, decimal с двумя знаками; от 0.00 до 99999.99.
+          nullable: true
+        actualReps:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - position
+        - plannedWeightKg
+        - plannedRepsMin
+        - plannedRepsMax
+        - status
+        - actualWeightKg
+        - actualReps
+        - startedAt
+        - completedAt
+    WorkoutExercise:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        exerciseId:
+          type: string
+          format: uuid
+        position:
+          type: integer
+          minimum: 1
+          maximum: 100
+        nameSnapshot:
+          type: string
+          maxLength: 120
+          minLength: 1
+        note:
+          type: string
+          maxLength: 10000
+        techniqueSnapshot:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/TechniqueGuide'
+        sets:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutSet'
+          maxItems: 100
+          minItems: 1
+      required:
+        - id
+        - exerciseId
+        - position
+        - nameSnapshot
+        - note
+        - techniqueSnapshot
+        - sets
+    RestInterval:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        afterSetId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        endReason:
+          type: string
+          enum:
+            - next_set
+            - finish
+            - correction
+          nullable: true
+      required:
+        - id
+        - afterSetId
+        - startedAt
+        - endedAt
+        - endReason
+    WorkoutRevision:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        workoutId:
+          type: string
+          format: uuid
+        revisionNo:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        reason:
+          type: string
+          maxLength: 10000
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutExercise'
+          maxItems: 100
+          minItems: 1
+        restIntervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestInterval'
+          maxItems: 10000
+          minItems: 0
+      required:
+        - id
+        - workoutId
+        - revisionNo
+        - reason
+        - createdAt
+        - exercises
+        - restIntervals
+    WorkoutSummary:
+      type: object
+      additionalProperties: false
+      properties:
+        durationSeconds:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        completedSets:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        totalReps:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        volume:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+        totalRestSeconds:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+        meanBetweenSetRestSeconds:
+          type: number
+          minimum: 0
+          nullable: true
+      required:
+        - durationSeconds
+        - completedSets
+        - totalReps
+        - volume
+        - totalRestSeconds
+        - meanBetweenSetRestSeconds
+    Workout:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        programId:
+          type: string
+          format: uuid
+          nullable: true
+        programRevisionId:
+          type: string
+          format: uuid
+          nullable: true
+        scheduledDate:
+          type: string
+          format: date
+          nullable: true
+        localDate:
+          type: string
+          format: date
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+        status:
+          type: string
+          enum:
+            - active
+            - completed
+            - discarded
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        currentRevision:
+          $ref: '#/components/schemas/WorkoutRevision'
+        summary:
+          $ref: '#/components/schemas/WorkoutSummary'
+      required:
+        - id
+        - version
+        - createdAt
+        - updatedAt
+        - programId
+        - programRevisionId
+        - scheduledDate
+        - localDate
+        - timezone
+        - status
+        - startedAt
+        - finishedAt
+        - currentRevision
+        - summary
+    WorkoutPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workout'
+          maxItems: 100
+          minItems: 0
+        nextCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+          nullable: true
+      required:
+        - items
+        - nextCursor
+    WorkoutRevisionPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutRevision'
+          maxItems: 100
+          minItems: 0
+        nextCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+          nullable: true
+      required:
+        - items
+        - nextCursor
+    StartWorkout:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        programRevisionId:
+          type: string
+          format: uuid
+          nullable: true
+        scheduledDate:
+          type: string
+          format: date
+          nullable: true
+        localDate:
+          type: string
+          format: date
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+        startedAt:
+          type: string
+          format: date-time
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanExerciseInput'
+          maxItems: 100
+          minItems: 1
+      required:
+        - id
+        - programRevisionId
+        - scheduledDate
+        - localDate
+        - timezone
+        - startedAt
+        - exercises
+    CompleteSetPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        setId:
+          type: string
+          format: uuid
+        actualWeightKg:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,4})\.[0-9]{2}$
+          description: Килограммы, decimal с двумя знаками; от 0.00 до 99999.99.
+        actualReps:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        completedAt:
+          type: string
+          format: date-time
+      required:
+        - setId
+        - actualWeightKg
+        - actualReps
+        - completedAt
+    BeginSetPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        setId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+      required:
+        - setId
+        - startedAt
+    UndoSetPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        setId:
+          type: string
+          format: uuid
+      required:
+        - setId
+    CorrectSetPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        setId:
+          type: string
+          format: uuid
+        actualWeightKg:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,4})\.[0-9]{2}$
+          description: Килограммы, decimal с двумя знаками; от 0.00 до 99999.99.
+        actualReps:
+          type: integer
+          minimum: 1
+          maximum: 1000
+      required:
+        - setId
+        - actualWeightKg
+        - actualReps
+    ReplaceExercisesPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutExercise'
+          maxItems: 100
+          minItems: 1
+      required:
+        - exercises
+    FinishPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        finishedAt:
+          type: string
+          format: date-time
+        skipRemaining:
+          type: boolean
+      required:
+        - finishedAt
+        - skipRemaining
+    DiscardPayload:
+      type: object
+      additionalProperties: false
+      properties: {}
+    CorrectResultPayload:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          maxLength: 10000
+          minLength: 1
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutExercise'
+          maxItems: 100
+          minItems: 1
+        restIntervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestInterval'
+          maxItems: 10000
+          minItems: 0
+      required:
+        - reason
+        - startedAt
+        - finishedAt
+        - exercises
+        - restIntervals
+    NoteInput:
+      type: object
+      additionalProperties: false
+      properties:
+        body:
+          type: string
+          maxLength: 10000
+      required:
+        - body
+    DayNote:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        localDate:
+          type: string
+          format: date
+        body:
+          type: string
+          maxLength: 10000
+      required:
+        - id
+        - version
+        - createdAt
+        - updatedAt
+        - localDate
+        - body
+    CompleteSetCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - complete_set
+        payload:
+          $ref: '#/components/schemas/CompleteSetPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    BeginSetCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - begin_set
+        payload:
+          $ref: '#/components/schemas/BeginSetPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    UndoLastSetCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - undo_last_set
+        payload:
+          $ref: '#/components/schemas/UndoSetPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    CorrectSetCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - correct_set
+        payload:
+          $ref: '#/components/schemas/CorrectSetPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    ReplaceActiveExercisesCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - replace_active_exercises
+        payload:
+          $ref: '#/components/schemas/ReplaceExercisesPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    FinishWorkoutCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - finish_workout
+        payload:
+          $ref: '#/components/schemas/FinishPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    DiscardWorkoutCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - discard_workout
+        payload:
+          $ref: '#/components/schemas/DiscardPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    CorrectResultCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - correct_result
+        payload:
+          $ref: '#/components/schemas/CorrectResultPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    CreateExerciseCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          enum:
+            - 0
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - create_exercise
+        payload:
+          $ref: '#/components/schemas/CreateExercise'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    StartWorkoutCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          enum:
+            - 0
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - start_workout
+        payload:
+          $ref: '#/components/schemas/StartWorkout'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    PutDayNoteCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - put_day_note
+        payload:
+          $ref: '#/components/schemas/NoteInput'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    DeleteDayNoteCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - delete_day_note
+        payload:
+          $ref: '#/components/schemas/DiscardPayload'
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
+    WorkoutCommand:
+      oneOf:
+        - $ref: '#/components/schemas/CompleteSetCommand'
+        - $ref: '#/components/schemas/BeginSetCommand'
+        - $ref: '#/components/schemas/UndoLastSetCommand'
+        - $ref: '#/components/schemas/CorrectSetCommand'
+        - $ref: '#/components/schemas/ReplaceActiveExercisesCommand'
+        - $ref: '#/components/schemas/FinishWorkoutCommand'
+        - $ref: '#/components/schemas/DiscardWorkoutCommand'
+        - $ref: '#/components/schemas/CorrectResultCommand'
+      discriminator:
+        propertyName: type
+        mapping:
+          complete_set: '#/components/schemas/CompleteSetCommand'
+          begin_set: '#/components/schemas/BeginSetCommand'
+          undo_last_set: '#/components/schemas/UndoLastSetCommand'
+          correct_set: '#/components/schemas/CorrectSetCommand'
+          replace_active_exercises: '#/components/schemas/ReplaceActiveExercisesCommand'
+          finish_workout: '#/components/schemas/FinishWorkoutCommand'
+          discard_workout: '#/components/schemas/DiscardWorkoutCommand'
+          correct_result: '#/components/schemas/CorrectResultCommand'
+    SyncCommand:
+      oneOf:
+        - $ref: '#/components/schemas/CompleteSetCommand'
+        - $ref: '#/components/schemas/BeginSetCommand'
+        - $ref: '#/components/schemas/UndoLastSetCommand'
+        - $ref: '#/components/schemas/CorrectSetCommand'
+        - $ref: '#/components/schemas/ReplaceActiveExercisesCommand'
+        - $ref: '#/components/schemas/FinishWorkoutCommand'
+        - $ref: '#/components/schemas/DiscardWorkoutCommand'
+        - $ref: '#/components/schemas/CorrectResultCommand'
+        - $ref: '#/components/schemas/CreateExerciseCommand'
+        - $ref: '#/components/schemas/StartWorkoutCommand'
+        - $ref: '#/components/schemas/PutDayNoteCommand'
+        - $ref: '#/components/schemas/DeleteDayNoteCommand'
+      discriminator:
+        propertyName: type
+        mapping:
+          complete_set: '#/components/schemas/CompleteSetCommand'
+          begin_set: '#/components/schemas/BeginSetCommand'
+          undo_last_set: '#/components/schemas/UndoLastSetCommand'
+          correct_set: '#/components/schemas/CorrectSetCommand'
+          replace_active_exercises: '#/components/schemas/ReplaceActiveExercisesCommand'
+          finish_workout: '#/components/schemas/FinishWorkoutCommand'
+          discard_workout: '#/components/schemas/DiscardWorkoutCommand'
+          correct_result: '#/components/schemas/CorrectResultCommand'
+          create_exercise: '#/components/schemas/CreateExerciseCommand'
+          start_workout: '#/components/schemas/StartWorkoutCommand'
+          put_day_note: '#/components/schemas/PutDayNoteCommand'
+          delete_day_note: '#/components/schemas/DeleteDayNoteCommand'
+    Aggregate:
+      oneOf:
+        - $ref: '#/components/schemas/User'
+        - $ref: '#/components/schemas/Device'
+        - $ref: '#/components/schemas/Exercise'
+        - $ref: '#/components/schemas/Program'
+        - $ref: '#/components/schemas/Workout'
+        - $ref: '#/components/schemas/DayNote'
+        - $ref: '#/components/schemas/Photo'
+        - $ref: '#/components/schemas/ReminderRule'
+        - $ref: '#/components/schemas/PushSubscription'
+    ApiError:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          maxLength: 100
+        message:
+          type: string
+          maxLength: 1000
+        requestId:
+          type: string
+          format: uuid
+        details:
+          type: object
+          additionalProperties: false
+          properties:
+            currentVersion:
+              type: integer
+              minimum: 1
+              maximum: 9007199254740991
+            aggregateId:
+              type: string
+              format: uuid
+            serverAggregate:
+              $ref: '#/components/schemas/Aggregate'
+            fieldErrors:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                properties:
+                  path:
+                    type: string
+                    maxLength: 500
+                  code:
+                    type: string
+                    maxLength: 100
+                required:
+                  - path
+                  - code
+              maxItems: 100
+              minItems: 0
+      required:
+        - code
+        - message
+        - requestId
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          $ref: '#/components/schemas/ApiError'
+      required:
+        - error
+    CommandResult:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - applied
+            - duplicate
+            - conflict
+            - rejected
+            - dependency_failed
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/Aggregate'
+        error:
+          $ref: '#/components/schemas/ApiError'
+      required:
+        - commandId
+        - status
+    SyncBatch:
+      type: object
+      additionalProperties: false
+      properties:
+        commands:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncCommand'
+          maxItems: 50
+          minItems: 1
+      required:
+        - commands
+    SyncBatchResult:
+      type: object
+      additionalProperties: false
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommandResult'
+          maxItems: 50
+          minItems: 0
+      required:
+        - results
+    PlanOccurrence:
+      type: object
+      additionalProperties: false
+      properties:
+        programId:
+          type: string
+          format: uuid
+        programRevisionId:
+          type: string
+          format: uuid
+        sourceDate:
+          type: string
+          format: date
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - planned
+            - missed
+            - cancelled
+            - moved
+            - started
+            - completed
+      required:
+        - programId
+        - programRevisionId
+        - sourceDate
+        - date
+        - status
+    CalendarDay:
+      type: object
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanOccurrence'
+          maxItems: 10
+          minItems: 0
+        workoutSummaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workout'
+          maxItems: 100
+          minItems: 0
+        notePresent:
+          type: boolean
+        photoCount:
+          type: integer
+          minimum: 0
+          maximum: 20
+        thumbnailPhotoIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 2
+          minItems: 0
+      required:
+        - date
+        - plans
+        - workoutSummaries
+        - notePresent
+        - photoCount
+        - thumbnailPhotoIds
+    Calendar:
+      type: object
+      additionalProperties: false
+      properties:
+        month:
+          type: string
+          pattern: ^[0-9]{4}-(0[1-9]|1[0-2])$
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarDay'
+          maxItems: 31
+          minItems: 28
+      required:
+        - month
+        - timezone
+        - days
+    Day:
+      type: object
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanOccurrence'
+          maxItems: 10
+          minItems: 0
+        workouts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workout'
+          maxItems: 100
+          minItems: 0
+        note:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/DayNote'
+        photos:
+          $ref: '#/components/schemas/PhotoPage'
+      required:
+        - date
+        - plans
+        - workouts
+        - note
+        - photos
+    ProgressPoint:
+      type: object
+      additionalProperties: false
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        workoutIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 500
+          minItems: 0
+        value:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+      required:
+        - from
+        - to
+        - workoutIds
+        - value
+    ProgressSummary:
+      type: object
+      additionalProperties: false
+      properties:
+        first:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+          nullable: true
+        last:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+          nullable: true
+        max:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+          nullable: true
+        difference:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+          nullable: true
+        percentChange:
+          type: string
+          pattern: ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$
+          nullable: true
+      required:
+        - first
+        - last
+        - max
+        - difference
+        - percentChange
+    Progress:
+      type: object
+      additionalProperties: false
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+        metric:
+          type: string
+          enum:
+            - maxWeight
+            - completedSets
+            - totalReps
+            - volume
+        bucket:
+          type: string
+          enum:
+            - session
+            - week
+            - month
+        units:
+          type: string
+          enum:
+            - kg
+            - sets
+            - reps
+            - kg_reps
+        aggregation:
+          type: string
+          enum:
+            - max
+            - sum
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProgressPoint'
+          maxItems: 500
+          minItems: 0
+        summary:
+          $ref: '#/components/schemas/ProgressSummary'
+        dataCount:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+      required:
+        - exerciseId
+        - from
+        - to
+        - timezone
+        - metric
+        - bucket
+        - units
+        - aggregation
+        - points
+        - summary
+        - dataCount
+    Photo:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        localDate:
+          type: string
+          format: date
+        workoutId:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - ready
+            - failed
+            - deleting
+        sizeBytes:
+          type: integer
+          minimum: 1
+          maximum: 10485760
+        width:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          nullable: true
+        height:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          nullable: true
+        position:
+          type: integer
+          minimum: 1
+          maximum: 20
+        errorCode:
+          type: string
+          maxLength: 100
+          nullable: true
+      required:
+        - id
+        - version
+        - createdAt
+        - updatedAt
+        - localDate
+        - workoutId
+        - status
+        - sizeBytes
+        - width
+        - height
+        - position
+        - errorCode
+    PhotoPage:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Photo'
+          maxItems: 100
+          minItems: 0
+        nextCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+          nullable: true
+      required:
+        - items
+        - nextCursor
+    PhotoUploadInput:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        localDate:
+          type: string
+          format: date
+        workoutId:
+          type: string
+          format: uuid
+          nullable: true
+        mimeType:
+          type: string
+          enum:
+            - image/jpeg
+            - image/png
+            - image/webp
+        sizeBytes:
+          type: integer
+          minimum: 1
+          maximum: 10485760
+        checksumSha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+          description: SHA-256 hex lowercase; upload adapter формирует checksum header провайдера.
+      required:
+        - id
+        - localDate
+        - mimeType
+        - sizeBytes
+        - checksumSha256
+    PhotoUpload:
+      type: object
+      additionalProperties: false
+      properties:
+        photoId:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        uploadUrl:
+          type: string
+          format: uri
+          maxLength: 4096
+        requiredHeaders:
+          type: object
+          additionalProperties:
+            type: string
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - photoId
+        - version
+        - uploadUrl
+        - requiredHeaders
+        - expiresAt
+    PhotoComplete:
+      type: object
+      additionalProperties: false
+      properties:
+        expectedVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        checksumSha256:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+          description: SHA-256 hex lowercase; upload adapter формирует checksum header провайдера.
+      required:
+        - expectedVersion
+        - checksumSha256
+    PhotoPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        localDate:
+          type: string
+          format: date
+        position:
+          type: integer
+          minimum: 1
+          maximum: 20
+      minProperties: 1
+    PhotoReadInput:
+      type: object
+      additionalProperties: false
+      properties:
+        photoIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 50
+          minItems: 1
+          uniqueItems: true
+        variant:
+          type: string
+          enum:
+            - image
+            - thumbnail
+      required:
+        - photoIds
+        - variant
+    PhotoReadUrls:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              photoId:
+                type: string
+                format: uuid
+              url:
+                type: string
+                format: uri
+                maxLength: 4096
+              expiresAt:
+                type: string
+                format: date-time
+            required:
+              - photoId
+              - url
+              - expiresAt
+          maxItems: 50
+          minItems: 0
+      required:
+        - items
+    ReminderRule:
+      type: object
+      additionalProperties: false
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        enabled:
+          type: boolean
+        localTime:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+      required:
+        - version
+        - enabled
+        - localTime
+        - timezone
+    ReminderInput:
+      type: object
+      additionalProperties: false
+      properties:
+        enabled:
+          type: boolean
+        localTime:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: IANA timezone; сервер проверяет существование в tzdata.
+      required:
+        - enabled
+        - localTime
+        - timezone
+    PushConfig:
+      type: object
+      additionalProperties: false
+      properties:
+        publicKey:
+          type: string
+          maxLength: 256
+        contractVersion:
+          type: string
+          maxLength: 20
+      required:
+        - publicKey
+        - contractVersion
+    PushSubscription:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deviceId:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        disabledAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - version
+        - createdAt
+        - updatedAt
+        - deviceId
+        - expiresAt
+        - disabledAt
+    PushSubscribe:
+      type: object
+      additionalProperties: false
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+        endpoint:
+          type: string
+          format: uri
+          maxLength: 4096
+        keys:
+          type: object
+          additionalProperties: false
+          properties:
+            p256dh:
+              type: string
+              maxLength: 256
+            auth:
+              type: string
+              maxLength: 128
+          required:
+            - p256dh
+            - auth
+        expirationTime:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - deviceId
+        - endpoint
+        - keys
+        - expirationTime
+    PushTest:
+      type: object
+      additionalProperties: false
+      properties:
+        subscriptionId:
+          type: string
+          format: uuid
+      required:
+        - subscriptionId
+    PushTestAccepted:
+      type: object
+      additionalProperties: false
+      properties:
+        deliveryId:
+          type: string
+          format: uuid
+      required:
+        - deliveryId
+    Bootstrap:
+      type: object
+      additionalProperties: false
+      properties:
+        snapshotId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - queued
+            - ready
+            - failed
+        watermark:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+          nullable: true
+        initialCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - snapshotId
+        - status
+        - watermark
+        - initialCursor
+        - expiresAt
+    BootstrapPage:
+      type: object
+      additionalProperties: false
+      properties:
+        snapshot:
+          $ref: '#/components/schemas/Bootstrap'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Aggregate'
+          maxItems: 100
+          minItems: 0
+        nextCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+          nullable: true
+      required:
+        - snapshot
+        - items
+        - nextCursor
+    UserChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - user
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/User'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    DeviceChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - device
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/Device'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    ExerciseChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - exercise
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/Exercise'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    ProgramChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - program
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/Program'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    WorkoutChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - workout
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/Workout'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    DayNoteChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - day_note
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/DayNote'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    PhotoChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - photo
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/Photo'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    ReminderRuleChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - reminder
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/ReminderRule'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    PushSubscriptionChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - push_subscription
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - upsert
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        aggregate:
+          $ref: '#/components/schemas/PushSubscription'
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+        - aggregate
+    DeleteChange:
+      type: object
+      additionalProperties: false
+      properties:
+        seq:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        entityType:
+          type: string
+          enum:
+            - user
+            - device
+            - exercise
+            - program
+            - workout
+            - day_note
+            - photo
+            - reminder
+            - push_subscription
+        entityId:
+          type: string
+          format: uuid
+        operation:
+          type: string
+          enum:
+            - delete
+        entityVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+      required:
+        - seq
+        - entityType
+        - entityId
+        - operation
+        - entityVersion
+    Change:
+      oneOf:
+        - $ref: '#/components/schemas/UserChange'
+        - $ref: '#/components/schemas/DeviceChange'
+        - $ref: '#/components/schemas/ExerciseChange'
+        - $ref: '#/components/schemas/ProgramChange'
+        - $ref: '#/components/schemas/WorkoutChange'
+        - $ref: '#/components/schemas/DayNoteChange'
+        - $ref: '#/components/schemas/PhotoChange'
+        - $ref: '#/components/schemas/ReminderRuleChange'
+        - $ref: '#/components/schemas/PushSubscriptionChange'
+        - $ref: '#/components/schemas/DeleteChange'
+    Changes:
+      type: object
+      additionalProperties: false
+      properties:
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Change'
+          maxItems: 100
+          minItems: 0
+        nextCursor:
+          type: string
+          maxLength: 4096
+          minLength: 1
+        highWatermark:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)$
+          description: bigint строкой без потери точности JavaScript.
+        hasMore:
+          type: boolean
+      required:
+        - changes
+        - nextCursor
+        - highWatermark
+        - hasMore
+    Health:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+      required:
+        - status
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: ID команды; одинаковый ID+payload возвращает первоначальный результат.
+    DeviceId:
+      name: X-Device-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: ID устройства из текущей сессии, не средство авторизации.
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: ^"[0-9]+"$
+      description: Version в кавычках; "0" только для новой заметки/правила.
+    Csrf:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 256
+      description: Токен текущей сессии. Также обязательна проверка Origin.
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 30
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+        maxLength: 4096
+        minLength: 1
+  responses:
+    Error400:
+      description: Некорректный JSON/структура
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error401:
+      description: Нужен вход
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error403:
+      description: CSRF или действие запрещено
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error404:
+      description: Запись не найдена или чужая
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error409:
+      description: Конфликт версии/ID/доменных правил
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error410:
+      description: Срок snapshot/cursor истёк
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error413:
+      description: Превышен размер
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error422:
+      description: Недопустимые значения
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error428:
+      description: Отсутствует If-Match
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error429:
+      description: Лимит запросов
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 2147483647
+          description: Секунды до повтора
+    Error500:
+      description: Внутренняя ошибка
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error503:
+      description: Сервис временно недоступен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'

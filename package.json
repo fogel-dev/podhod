@@ -18,9 +18,18 @@
     "lint": "npm run lint --workspace @podhod/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run typecheck && npm run lint && npm run test:architecture --workspace @podhod/web && npm run format:check"
+    "api:generate": "node tooling/api/generate.mjs",
+    "api:lint": "redocly lint docs/openapi.yaml --max-problems 100",
+    "api:compatibility": "node tooling/api/compatibility.mjs",
+    "api:test": "node --test tooling/api/*.test.mjs",
+    "api:check": "npm run api:lint && node tooling/api/generate.mjs --check && npm run api:test",
+    "check": "npm run api:check && npm run typecheck && npm run lint && npm run test:architecture --workspace @podhod/web && npm run format:check"
   },
   "devDependencies": {
-    "prettier": "3.9.10"
+    "@redocly/cli": "2.62.1",
+    "openapi-diff": "0.24.1",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.9.10",
+    "yaml": "2.9.1"
   }
 }
