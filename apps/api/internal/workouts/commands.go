@@ -5,6 +5,7 @@ import (
 	"github.com/fogel-dev/podhod/apps/api/internal/id"
 	"github.com/fogel-dev/podhod/apps/api/internal/programs"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -51,6 +52,27 @@ func eventTime(w *Workout, cmd Command, t time.Time) error {
 }
 func apply(w *Workout, cmd Command) error {
 	switch cmd.Type {
+	case "set_cardio":
+		var p struct {
+			Cardio *Cardio `json:"cardio"`
+		}
+		if err := httpx.Strict(cmd.Payload, &p); err != nil {
+			return err
+		}
+		var fields map[string]any
+		if err := httpx.Strict(cmd.Payload, &fields); err != nil {
+			return err
+		}
+		if _, present := fields["cardio"]; !present {
+			return httpx.Fail(422, "invalid_cardio")
+		}
+		if p.Cardio != nil {
+			p.Cardio.Activity = strings.TrimSpace(p.Cardio.Activity)
+			if !httpx.Text(p.Cardio.Activity, 1, 120) || p.Cardio.DurationMinutes < 1 || p.Cardio.DurationMinutes > 1440 {
+				return httpx.Fail(422, "invalid_cardio")
+			}
+		}
+		w.Cardio = p.Cardio
 	case "begin_set":
 		var p struct {
 			SetID     string    `json:"setId"`

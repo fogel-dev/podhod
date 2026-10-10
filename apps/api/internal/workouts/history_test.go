@@ -17,6 +17,7 @@ func TestCorrectionClonesHistoryAndConflicts(t *testing.T) {
 	domaintest.Status(t, response, 201)
 	var w Workout
 	domaintest.Decode(t, response, &w)
+	w = send(t, app, a, w, "set_cardio", map[string]any{"cardio": Cardio{"Велотренажер", 20}}, in.StartedAt.Add(time.Second), 200)
 	at := in.StartedAt.Add(10 * time.Second)
 	w = send(t, app, a, w, "complete_set", map[string]any{"setId": in.Exercises[0].Targets[0].ID, "actualWeightKg": "45.00", "actualReps": 10, "completedAt": at}, at, 200)
 	finish := at.Add(10 * time.Second)
@@ -55,7 +56,7 @@ func TestCorrectionClonesHistoryAndConflicts(t *testing.T) {
 	}
 	response = app.Request(a, "GET", "/api/v1/workouts/"+w.ID, nil, "", "")
 	domaintest.Decode(t, response, &w)
-	if w.CurrentRevision.ID == oldID || w.CurrentRevision.RevisionNo != 2 || w.CurrentRevision.Reason == nil || w.Summary.Volume != "720.00" || w.Version != 4 {
+	if w.CurrentRevision.ID == oldID || w.CurrentRevision.RevisionNo != 2 || w.CurrentRevision.Reason == nil || w.Summary.Volume != "720.00" || w.Version != 5 || w.Cardio == nil || w.Cardio.Activity != "Велотренажер" || w.Cardio.DurationMinutes != 20 {
 		t.Fatal(w)
 	}
 	response = app.Request(a, "GET", "/api/v1/workouts/"+w.ID+"/revisions/"+oldID, nil, "", "")

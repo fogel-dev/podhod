@@ -56,6 +56,93 @@ func TestSharedExerciseWorkoutKeepsHistoryPrivate(t *testing.T) {
 		t.Fatal("library edit rewrote workout snapshot")
 	}
 }
+
+func TestCatalogNotesAndTechniqueWorkoutSnapshot(t *testing.T) {
+	app, actor, in := setup(t)
+	in.Exercises[0].ExerciseID = "ca7a1000-0000-4000-8000-000000000001"
+	catalog, err := exercises.Load(context.Background(), app.Core.Pool, actor.Session.User.ID, in.Exercises[0].ExerciseID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	in.Exercises[0].Note = catalog.Note
+	response := app.Write(actor, "POST", "/api/v1/workouts", in, 0)
+	domaintest.Status(t, response, 201)
+	var workout Workout
+	domaintest.Decode(t, response, &workout)
+	e := workout.CurrentRevision.Exercises[0]
+	if e.NameSnapshot != catalog.Name || e.Note != catalog.Note || e.TechniqueSnapshot == nil || e.TechniqueSnapshot.Body != catalog.TechniqueGuide.Body || e.TechniqueSnapshot.SourceURL != catalog.TechniqueGuide.SourceURL {
+		t.Fatalf("catalog content missing from workout: %+v", e)
+	}
+	response = app.Request(actor, "GET", "/api/v1/workouts/"+workout.ID, nil, "", "")
+	domaintest.Status(t, response, 200)
+	domaintest.Decode(t, response, &workout)
+	saved := workout.CurrentRevision.Exercises[0]
+	if saved.Note != e.Note || saved.TechniqueSnapshot == nil || saved.TechniqueSnapshot.Body != e.TechniqueSnapshot.Body || saved.TechniqueSnapshot.SourceURL != e.TechniqueSnapshot.SourceURL {
+		t.Fatal("catalog snapshot was not persisted")
+	}
+}
+
+func TestOptionalCardioPersistenceValidationReceiptsAndSealing(t *testing.T) {
+	app, actor, in := setup(t)
+	response := app.Write(actor, "POST", "/api/v1/workouts", in, 0)
+	domaintest.Status(t, response, 201)
+	var w Workout
+	domaintest.Decode(t, response, &w)
+	if w.Cardio != nil {
+		t.Fatal("new workout has cardio without an entry")
+	}
+	other := app.User(t, "second")
+	payload, _ := json.Marshal(map[string]any{"cardio": map[string]any{"activity": "  Велотренажер  ", "durationMinutes": 20}})
+	cmd := Command{id.New(), actor.Session.DeviceID, w.ID, w.Version, in.StartedAt.Add(time.Second), "set_cardio", payload}
+	response = app.Request(actor, "POST", "/api/v1/workouts/"+w.ID+"/commands", cmd, "", "")
+	domaintest.Status(t, response, 200)
+	var result struct{ Aggregate Workout }
+	domaintest.Decode(t, response, &result)
+	w = result.Aggregate
+	if w.Cardio == nil || w.Cardio.Activity != "Велотренажер" || w.Cardio.DurationMinutes != 20 || w.Version != 2 {
+		t.Fatal(w)
+	}
+	domaintest.Status(t, app.Request(actor, "POST", "/api/v1/workouts/"+w.ID+"/commands", cmd, "", ""), 200)
+	cmd.CommandID = id.New()
+	domaintest.Status(t, app.Request(actor, "POST", "/api/v1/workouts/"+w.ID+"/commands", cmd, "", ""), 409)
+	cmd.DeviceID, cmd.ExpectedVersion = other.Session.DeviceID, w.Version
+	domaintest.Status(t, app.Request(other, "POST", "/api/v1/workouts/"+w.ID+"/commands", cmd, "", ""), 404)
+	domaintest.Status(t, app.Request(other, "GET", "/api/v1/workouts/"+w.ID, nil, "", ""), 404)
+	for _, p := range []any{
+		map[string]any{},
+		map[string]any{"cardio": map[string]any{"activity": " ", "durationMinutes": 20}},
+		map[string]any{"cardio": map[string]any{"activity": "Бег", "durationMinutes": 0}},
+		map[string]any{"cardio": map[string]any{"activity": "Бег", "durationMinutes": 1441}},
+	} {
+		w = send(t, app, actor, w, "set_cardio", p, in.StartedAt.Add(2*time.Second), 422)
+	}
+	for _, p := range []any{
+		map[string]any{"cardio": map[string]any{"activity": "Бег", "durationMinutes": 2.5}},
+		map[string]any{"cardio": map[string]any{"activity": "Бег", "durationMinutes": 20, "unknown": true}},
+	} {
+		w = send(t, app, actor, w, "set_cardio", p, in.StartedAt.Add(2*time.Second), 400)
+	}
+	w = send(t, app, actor, w, "set_cardio", map[string]any{"cardio": nil}, in.StartedAt.Add(3*time.Second), 200)
+	if w.Cardio != nil {
+		t.Fatal("cardio mark was not cleared")
+	}
+	w = send(t, app, actor, w, "set_cardio", map[string]any{"cardio": Cardio{"Беговая дорожка", 15}}, in.StartedAt.Add(4*time.Second), 200)
+	response = app.Request(actor, "GET", "/api/v1/workouts/"+w.ID, nil, "", "")
+	domaintest.Status(t, response, 200)
+	domaintest.Decode(t, response, &w)
+	if w.Cardio == nil || w.Cardio.DurationMinutes != 15 || w.Cardio.Activity != "Беговая дорожка" {
+		t.Fatal("cardio was not persisted")
+	}
+	finish := in.StartedAt.Add(5 * time.Second)
+	w = send(t, app, actor, w, "finish_workout", map[string]any{"finishedAt": finish, "skipRemaining": true}, finish, 200)
+	if w.Cardio == nil || w.Cardio.DurationMinutes != 15 {
+		t.Fatal("finish lost cardio")
+	}
+	w = send(t, app, actor, w, "set_cardio", map[string]any{"cardio": nil}, finish, 409)
+	if _, err := app.Core.Pool.Exec(context.Background(), `UPDATE workouts SET cardio_minutes=30 WHERE id=$1`, w.ID); err == nil {
+		t.Fatal("completed cardio is mutable in database")
+	}
+}
 func TestWorkoutFactsRestUndoFinishAndSealing(t *testing.T) {
 	app, a, in := setup(t)
 	b := app.User(t, "second")

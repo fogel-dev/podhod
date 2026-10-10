@@ -82,6 +82,8 @@ target: id, position, weightKg, repsMin, repsMax
 
 Сервер берёт имя упражнения из библиотеки и сохраняет snapshot; source/revision ID из чужого аккаунта запрещены. Позиции последовательные от 1, IDs дочерних строк уникальны. Draft мастера хранится клиентом; отдельная серверная сущность черновика пока не нужна. Проверенные technique guides публикуются отдельным административным процессом без публичного endpoint в MVP.
 
+Редакционный каталог (миграция 012) не имеет пользовательского владельца: его note общедоступна, canEdit=false. Личные заметки пользовательских упражнений остаются доступными только автору. Мастер копирует доступную заметку при выборе упражнения; пользователь может изменить ее в своей программе. Техника сохраняется в снимке новой тренировки, завершенная история не обновляется из каталога.
+
 ## Тренировки и команды
 
 | Метод и путь                        | Вход / действие                                                                             | Результат                                                  |
@@ -95,6 +97,8 @@ target: id, position, weightKg, repsMin, repsMax
 | GET `/workouts/{id}/revisions/{id}` | —                                                                                           | прежний результат для просмотра                            |
 
 Команды active: `complete_set` (setId, actualWeightKg, actualReps, completedAt), `begin_set` (setId, startedAt), `undo_last_set` (setId), `correct_set` (setId, actualWeightKg, actualReps), `replace_active_exercises` (полный список, сохраняющий IDs уже выполненных подходов и отдыха), `finish_workout` (finishedAt, skipRemaining), `discard_workout`. Все требуют expectedVersion; replace не удаляет completed подходы, изменения таких фактов — correction. Добавленный во время тренировки план не переписывает программу.
+
+`set_cardio` доступна только для active: payload `{cardio: {activity, durationMinutes}}`, либо `{cardio: null}` для снятия отметки. Вид активности — непустой текст до 120 символов после trim; длительность — целые минуты от 1 до 1440. Workout возвращает nullable cardio; старые тренировки без отметки возвращают null. Данные личные, входят в общий version/commandId, сохраняются при завершении и исправлении силового результата. Кардио не меняет силовую статистику и время по timestamp; после завершения его изменение запрещено сервером и БД.
 
 Для completed: `correct_result` (reason, полный исправленный результат с approach/rest timestamp и позициями) создаёт следующую ревизию. Автоматической команды «переписать по новому плану» нет. Конкретные схемы command payload должны быть закрытым discriminated union в OpenAPI, не arbitrary JSON.
 

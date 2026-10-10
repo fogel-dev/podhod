@@ -1445,6 +1445,10 @@ export interface components {
       totalRestSeconds: number;
       meanBetweenSetRestSeconds: number | null;
     };
+    WorkoutCardio: {
+      activity: string;
+      durationMinutes: number;
+    } | null;
     Workout: {
       /** Format: uuid */
       id: string;
@@ -1471,6 +1475,7 @@ export interface components {
       finishedAt: string | null;
       currentRevision: components['schemas']['WorkoutRevision'];
       summary: components['schemas']['WorkoutSummary'];
+      cardio?: components['schemas']['WorkoutCardio'];
     };
     WorkoutPage: {
       items: components['schemas']['Workout'][];
@@ -1760,7 +1765,27 @@ export interface components {
       type: 'delete_day_note';
       payload: components['schemas']['DiscardPayload'];
     };
+    SetCardioCommand: {
+      /** Format: uuid */
+      commandId: string;
+      /** Format: uuid */
+      deviceId: string;
+      /** Format: uuid */
+      aggregateId: string;
+      expectedVersion: number;
+      /** Format: date-time */
+      occurredAt: string;
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'set_cardio';
+      payload: {
+        cardio: components['schemas']['WorkoutCardio'];
+      };
+    };
     WorkoutCommand:
+      | components['schemas']['SetCardioCommand']
       | components['schemas']['CompleteSetCommand']
       | components['schemas']['BeginSetCommand']
       | components['schemas']['UndoLastSetCommand']
@@ -1770,6 +1795,7 @@ export interface components {
       | components['schemas']['DiscardWorkoutCommand']
       | components['schemas']['CorrectResultCommand'];
     SyncCommand:
+      | components['schemas']['SetCardioCommand']
       | components['schemas']['CompleteSetCommand']
       | components['schemas']['BeginSetCommand']
       | components['schemas']['UndoLastSetCommand']

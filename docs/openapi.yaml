@@ -4506,6 +4506,22 @@ components:
         - volume
         - totalRestSeconds
         - meanBetweenSetRestSeconds
+    WorkoutCardio:
+      type: object
+      nullable: true
+      additionalProperties: false
+      properties:
+        activity:
+          type: string
+          minLength: 1
+          maxLength: 120
+        durationMinutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+      required:
+        - activity
+        - durationMinutes
     Workout:
       type: object
       additionalProperties: false
@@ -4560,6 +4576,8 @@ components:
           $ref: '#/components/schemas/WorkoutRevision'
         summary:
           $ref: '#/components/schemas/WorkoutSummary'
+        cardio:
+          $ref: '#/components/schemas/WorkoutCardio'
       required:
         - id
         - version
@@ -5222,8 +5240,49 @@ components:
         - occurredAt
         - type
         - payload
+    SetCardioCommand:
+      type: object
+      additionalProperties: false
+      properties:
+        commandId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          format: uuid
+        aggregateId:
+          type: string
+          format: uuid
+        expectedVersion:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        occurredAt:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - set_cardio
+        payload:
+          type: object
+          additionalProperties: false
+          properties:
+            cardio:
+              $ref: '#/components/schemas/WorkoutCardio'
+          required:
+            - cardio
+      required:
+        - commandId
+        - deviceId
+        - aggregateId
+        - expectedVersion
+        - occurredAt
+        - type
+        - payload
     WorkoutCommand:
       oneOf:
+        - $ref: '#/components/schemas/SetCardioCommand'
         - $ref: '#/components/schemas/CompleteSetCommand'
         - $ref: '#/components/schemas/BeginSetCommand'
         - $ref: '#/components/schemas/UndoLastSetCommand'
@@ -5235,6 +5294,7 @@ components:
       discriminator:
         propertyName: type
         mapping:
+          set_cardio: '#/components/schemas/SetCardioCommand'
           complete_set: '#/components/schemas/CompleteSetCommand'
           begin_set: '#/components/schemas/BeginSetCommand'
           undo_last_set: '#/components/schemas/UndoLastSetCommand'
@@ -5245,6 +5305,7 @@ components:
           correct_result: '#/components/schemas/CorrectResultCommand'
     SyncCommand:
       oneOf:
+        - $ref: '#/components/schemas/SetCardioCommand'
         - $ref: '#/components/schemas/CompleteSetCommand'
         - $ref: '#/components/schemas/BeginSetCommand'
         - $ref: '#/components/schemas/UndoLastSetCommand'
@@ -5260,6 +5321,7 @@ components:
       discriminator:
         propertyName: type
         mapping:
+          set_cardio: '#/components/schemas/SetCardioCommand'
           complete_set: '#/components/schemas/CompleteSetCommand'
           begin_set: '#/components/schemas/BeginSetCommand'
           undo_last_set: '#/components/schemas/UndoLastSetCommand'

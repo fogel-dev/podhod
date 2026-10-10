@@ -159,6 +159,9 @@ export function WorkoutSession({
   const [exerciseId, setExerciseId] = useState<string | null>(null);
   const [fact, setFact] = useState<WorkoutSet | null>(null);
   const [history, setHistory] = useState(false);
+  const [cardioEditing, setCardioEditing] = useState(false);
+  const [cardioActivity, setCardioActivity] = useState('');
+  const [cardioMinutes, setCardioMinutes] = useState('');
   const [correcting, setCorrecting] = useState(false);
   const [reason, setReason] = useState('');
   const [correction, setCorrection] = useState(
@@ -167,7 +170,11 @@ export function WorkoutSession({
   const pending = useRef<WorkoutCommand | null>(null);
   const [unconfirmed, setUnconfirmed] = useState(false);
   const action = useAction();
-  useUnsavedChanges(unconfirmed || action.busy);
+  const cardioDirty =
+    cardioEditing &&
+    (cardioActivity !== (workout.cardio?.activity ?? '') ||
+      cardioMinutes !== String(workout.cardio?.durationMinutes ?? ''));
+  useUnsavedChanges(unconfirmed || action.busy || cardioDirty);
   const exercises = workout.currentRevision.exercises;
   const allSets = exercises.flatMap((exercise) => exercise.sets);
   const nextSet =
@@ -190,6 +197,7 @@ export function WorkoutSession({
     setWorkout(result);
     setFact(null);
     setCorrecting(false);
+    setCardioEditing(false);
     onChanged();
   }
   function perform(data: CommandData) {
@@ -239,6 +247,133 @@ export function WorkoutSession({
           ? `Время тренировки ${duration(total)}`
           : `${duration(workout.summary.durationSeconds)} · ${workout.summary.completedSets} подходов`}
       </p>
+      {!selected && (
+        <section className="section">
+          <div className="row">
+            <h2>Кардио</h2>
+            {workout.status === 'active' && (
+              <button
+                className="secondary-button"
+                disabled={blocked}
+                onClick={() => {
+                  setCardioActivity(workout.cardio?.activity ?? '');
+                  setCardioMinutes(
+                    String(workout.cardio?.durationMinutes ?? ''),
+                  );
+                  setCardioEditing(true);
+                }}
+              >
+                {workout.cardio ? 'Изменить' : 'Отметить кардио'}
+              </button>
+            )}
+          </div>
+          <p className="small muted preserve-lines">
+            {workout.cardio
+              ? `${workout.cardio.activity} · ${workout.cardio.durationMinutes} мин`
+              : 'Не отмечено'}
+          </p>
+        </section>
+      )}
+      {cardioEditing && (
+        <Dialog
+          title="Кардио"
+          busy={blocked}
+          onClose={async () => {
+            if (
+              !cardioDirty ||
+              (await confirmAction('Закрыть без сохранения кардио?'))
+            )
+              setCardioEditing(false);
+          }}
+        >
+          <form
+            className="form-stack"
+            onSubmit={(event) => {
+              event.preventDefault();
+              perform({
+                type: 'set_cardio',
+                payload: {
+                  cardio: {
+                    activity: cardioActivity.trim(),
+                    durationMinutes: Number(cardioMinutes),
+                  },
+                },
+              });
+            }}
+          >
+            <fieldset disabled={blocked}>
+              <label>
+                Вид кардио
+                <input
+                  data-autofocus
+                  required
+                  maxLength={120}
+                  value={cardioActivity}
+                  onChange={(event) => setCardioActivity(event.target.value)}
+                />
+              </label>
+              <label>
+                Время, мин
+                <input
+                  required
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  max="1440"
+                  step="1"
+                  value={cardioMinutes}
+                  onChange={(event) => setCardioMinutes(event.target.value)}
+                />
+              </label>
+              <p role="alert">{action.error}</p>
+              <div className="actions">
+                {workout.cardio && (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() =>
+                      perform({ type: 'set_cardio', payload: { cardio: null } })
+                    }
+                  >
+                    Убрать отметку
+                  </button>
+                )}
+                <button className="primary" disabled={!cardioActivity.trim()}>
+                  {action.busy ? 'Сохраняем…' : 'Сохранить'}
+                </button>
+              </div>
+            </fieldset>
+            {unconfirmed && !action.busy && (
+              <div className="actions">
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => {
+                    const command = pending.current;
+                    if (command) void action.run(() => send(command));
+                  }}
+                >
+                  Повторить отправку
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={async () => {
+                    if (
+                      await confirmAction(
+                        'Загрузить тренировку с сервера? Несохраненное кардио будет сброшено.',
+                      )
+                    )
+                      window.location.reload();
+                  }}
+                >
+                  Проверить на сервере
+                </button>
+              </div>
+            )}
+          </form>
+        </Dialog>
+      )}
       {unconfirmed && !action.busy && (
         <section className="surface section">
           <p role="alert">{action.error}</p>

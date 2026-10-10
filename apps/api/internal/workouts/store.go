@@ -61,7 +61,13 @@ func store(ctx context.Context, tx pgx.Tx, user string, rev Revision, replace bo
 }
 func bump(ctx context.Context, tx pgx.Tx, user string, w Workout, commandID, kind string, occurred any, payload any) error {
 	encoded, _ := json.Marshal(payload)
-	_, err := tx.Exec(ctx, `UPDATE workouts SET version=version+1,status=$3,started_at=$4,finished_at=$5,current_revision_id=$6,updated_at=now() WHERE user_id=$1 AND id=$2`, user, w.ID, w.Status, w.StartedAt, w.FinishedAt, w.CurrentRevision.ID)
+	var activity *string
+	var minutes *int
+	if w.Cardio != nil {
+		activity = &w.Cardio.Activity
+		minutes = &w.Cardio.DurationMinutes
+	}
+	_, err := tx.Exec(ctx, `UPDATE workouts SET version=version+1,status=$3,started_at=$4,finished_at=$5,current_revision_id=$6,cardio_activity=$7,cardio_minutes=$8,updated_at=now() WHERE user_id=$1 AND id=$2`, user, w.ID, w.Status, w.StartedAt, w.FinishedAt, w.CurrentRevision.ID, activity, minutes)
 	if err == nil {
 		_, err = tx.Exec(ctx, `INSERT INTO workout_events(user_id,workout_id,command_id,type,occurred_at,payload) VALUES($1,$2,$3,$4,$5,$6)`, user, w.ID, commandID, kind, occurred, encoded)
 	}

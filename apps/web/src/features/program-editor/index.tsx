@@ -106,7 +106,7 @@ export function ProgramEditor({
         id: crypto.randomUUID(),
         exerciseId: exercise.id,
         position: items.length + 1,
-        note: '',
+        note: exercise.note,
         targets: [freshTarget(1), freshTarget(2), freshTarget(3)],
       },
     ]);

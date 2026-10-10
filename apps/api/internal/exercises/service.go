@@ -34,15 +34,15 @@ type Service struct {
 	Auth *auth.Service
 }
 
-const columns = `e.id::text,e.version,e.created_at,e.updated_at,e.name,e.note,e.archived_at,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=e.id AND g.reviewed_at<=now()),e.user_id::text`
+const columns = `e.id::text,e.version,e.created_at,e.updated_at,e.name,e.note,e.archived_at,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=e.id AND g.reviewed_at<=now()),coalesce(e.user_id::text,'')`
 
 func scan(row pgx.Row, user string) (Exercise, error) {
 	var e Exercise
 	var owner string
 	var guide []byte
 	err := row.Scan(&e.ID, &e.Version, &e.CreatedAt, &e.UpdatedAt, &e.Name, &e.Note, &e.ArchivedAt, &guide, &owner)
-	e.CanEdit = owner == user
-	if !e.CanEdit {
+	e.CanEdit = owner != "" && owner == user
+	if owner != "" && !e.CanEdit {
 		e.Note = ""
 	}
 	if err == nil && len(guide) > 0 {
@@ -55,7 +55,7 @@ type Reader interface {
 	QueryRow(context.Context, string, ...any) pgx.Row
 }
 
-// Load returns a shared identity and technique, keeping the author's note private.
+// Ownerless catalog notes are public; user-authored notes remain private.
 func Load(ctx context.Context, db Reader, user, id string) (Exercise, error) {
 	return scan(db.QueryRow(ctx, `SELECT `+columns+` FROM exercises e WHERE e.id=$1`, id), user)
 }

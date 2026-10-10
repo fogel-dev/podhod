@@ -72,6 +72,11 @@ type Workout struct {
 	FinishedAt        *time.Time `json:"finishedAt"`
 	CurrentRevision   Revision   `json:"currentRevision"`
 	Summary           Summary    `json:"summary"`
+	Cardio            *Cardio    `json:"cardio"`
+}
+type Cardio struct {
+	Activity        string `json:"activity"`
+	DurationMinutes int    `json:"durationMinutes"`
 }
 type Start struct {
 	ID                string                   `json:"id"`
@@ -196,9 +201,14 @@ func LoadRevision(ctx context.Context, db programs.DB, user, wid, rid string) (R
 func Load(ctx context.Context, db programs.DB, user, wid string) (Workout, error) {
 	var w Workout
 	var rid string
-	err := db.QueryRow(ctx, `SELECT id::text,version,created_at,updated_at,program_id::text,program_revision_id::text,scheduled_date::text,local_date::text,timezone,status,started_at,finished_at,current_revision_id::text FROM workouts WHERE user_id=$1 AND id=$2`, user, wid).Scan(&w.ID, &w.Version, &w.CreatedAt, &w.UpdatedAt, &w.ProgramID, &w.ProgramRevisionID, &w.ScheduledDate, &w.LocalDate, &w.Timezone, &w.Status, &w.StartedAt, &w.FinishedAt, &rid)
+	var activity *string
+	var minutes *int
+	err := db.QueryRow(ctx, `SELECT id::text,version,created_at,updated_at,program_id::text,program_revision_id::text,scheduled_date::text,local_date::text,timezone,status,started_at,finished_at,current_revision_id::text,cardio_activity,cardio_minutes FROM workouts WHERE user_id=$1 AND id=$2`, user, wid).Scan(&w.ID, &w.Version, &w.CreatedAt, &w.UpdatedAt, &w.ProgramID, &w.ProgramRevisionID, &w.ScheduledDate, &w.LocalDate, &w.Timezone, &w.Status, &w.StartedAt, &w.FinishedAt, &rid, &activity, &minutes)
 	if err != nil {
 		return w, err
+	}
+	if activity != nil && minutes != nil {
+		w.Cardio = &Cardio{Activity: *activity, DurationMinutes: *minutes}
 	}
 	w.CurrentRevision, err = LoadRevision(ctx, db, user, wid, rid)
 	w.Summary = summarize(w)
