@@ -2,6 +2,8 @@
 
 Дата: 10 октября 2026. EGO-9. Статус: проект контракта принят пользователем; маршруты ниже ещё не реализованы. Сейчас существует только `GET /api/health`. [Модель данных](backend.md) задаёт доменные правила, [ADR-002](adr/002-backend.md) — решения.
 
+Доступ уточнён в EGO-21: [ADR-003](adr/003-authentication.md) заменяет email-коды регистрацией/паролем и предусматривает внешние входы. OpenAPI/типы EGO-18 пока отражают прежние сценарии; их замена входит в реализацию EGO-21. Будущие provider endpoints пока не реализованы.
+
 ## Общие правила
 
 База `/api/v1`, HTTPS, JSON UTF-8, camelCase, UUID строкой. Даты `YYYY-MM-DD`, время RFC3339 с offset, сервер возвращает UTC; timezone IANA отдельно. Decimal вес и объём передаются строками (`"42.50"`), чтобы исключить округление float. Nullable явно передаётся как null. Ответ содержит только разрешённые поля, не SQL-модель целиком.
@@ -21,28 +23,31 @@
 
 Конфликт синхронизации дополнительно возвращает serverAggregate; field errors — массив `{path, code}`. Технические сообщения SQL/провайдера и токены наружу не выходят. GET приватных данных — `Cache-Control: no-store`; CDN не кеширует `/api`. Same-origin cookie auth и CSRF описаны в backend.md.
 
-Изменения корней требуют `If-Match: "<version>"`, отсутствие — 428; в командах вместо заголовка поле expectedVersion. Создание требует `Idempotency-Key: <UUID>` и `X-Device-Id`; ключ равен commandId внутренней операции. Повтор с иным телом — 409 idempotency_key_reused. GET возвращает version и ETag. Исключения: login/request и verify используют challenge протокол, logout идемпотентен сам по себе. 409 никогда не скрывается автоматическим overwrite.
+Изменения корней требуют `If-Match: "<version>"`, отсутствие — 428; в командах вместо заголовка поле expectedVersion. Создание требует `Idempotency-Key: <UUID>` и `X-Device-Id`; ключ равен commandId внутренней операции. Повтор с иным телом — 409 idempotency_key_reused. GET возвращает version и ETag. Исключения: регистрация/вход и auth flows используют собственный протокол, logout идемпотентен сам по себе. 409 никогда не скрывается автоматическим overwrite.
 
 Списки: `limit` по умолчанию 30, максимум 100, подписанный непрозрачный cursor, ответ `{items, nextCursor}`. Сортировка стабильная по полю и ID. Общий JSON body до 1 MiB, заметка до 10 000 символов, название до 120. Месячный календарь — строго один месяц, запрос прогресса — максимум 5 лет и 500 точек после агрегации. Все пределы уточняются по UX до реализации и отражаются в OpenAPI. Upload бинарных файлов проходит отдельно в storage.
 
 ## Вход, пользователь, устройства
 
-| Метод и путь                | Вход                                      | Результат                                                                       |
-| --------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
-| POST `/auth/email/request`  | email                                     | 202 challengeId, expiresAt, retryAfterSeconds; одинаково для новых/существующих |
-| POST `/auth/email/verify`   | challengeId, code, deviceLabel, deviceId? | user, deviceId, csrfToken; Set-Cookie                                           |
-| GET `/auth/session`         | cookie                                    | user, deviceId, expiresAt, csrfToken; 401 без сессии                            |
-| POST `/auth/logout`         | CSRF                                      | отзыв текущей сессии, очистка cookie                                            |
-| GET `/me`                   | —                                         | id, email, timezone, locale, version                                            |
-| PATCH `/me`                 | timezone/locale, If-Match                 | обновлённые настройки; историю не переносит                                     |
-| GET `/me/devices`           | —                                         | устройства и последний доступ, без токенов                                      |
-| DELETE `/me/devices/{id}`   | If-Match                                  | отзыв сессий и push устройства                                                  |
-| POST `/me/exports`          | Idempotency-Key                           | 202 exportId                                                                    |
-| GET `/me/exports/{id}`      | —                                         | queued/ready/failed, краткая download ссылка при ready                          |
-| POST `/me/deletion/request` | CSRF                                      | новый email challenge для удаления                                              |
-| POST `/me/deletion/confirm` | challengeId, code, Idempotency-Key        | 202, сессии отозваны; удаление продолжает worker                                |
+| Метод и путь                 | Вход                                                        | Результат                                                   |
+| ---------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| POST `/auth/register`        | email, login, password, passwordConfirmation, deviceLabel   | 201 user, deviceId, expiresAt, csrfToken; Set-Cookie        |
+| POST `/auth/login`           | login, password, deviceLabel                                | 200 user, deviceId, expiresAt, csrfToken; Set-Cookie        |
+| POST `/auth/password/change` | currentPassword, password, passwordConfirmation, CSRF       | 204; остальные сессии отозваны                              |
+| GET `/auth/session`          | cookie                                                      | user, deviceId, expiresAt, csrfToken; 401 без сессии        |
+| POST `/auth/logout`          | CSRF                                                        | отзыв текущей сессии, очистка cookie                        |
+| GET `/me`                    | —                                                           | id, login, email?, emailVerified, timezone, locale, version |
+| PATCH `/me`                  | timezone/locale, If-Match                                   | обновлённые настройки; историю не переносит                 |
+| GET `/me/devices`            | —                                                           | устройства и последний доступ, без токенов                  |
+| DELETE `/me/devices/{id}`    | If-Match                                                    | отзыв сессий и push устройства                              |
+| POST `/me/exports`           | Idempotency-Key                                             | 202 exportId                                                |
+| GET `/me/exports/{id}`       | —                                                           | queued/ready/failed, краткая download ссылка при ready      |
+| POST `/me/deletion/request`  | CSRF, свежее подтверждение паролем/подключённым провайдером | одноразовый flow purpose=delete_account                     |
+| POST `/me/deletion/confirm`  | flowId, Idempotency-Key, CSRF                               | 202, сессии отозваны; удаление продолжает worker            |
 
-Challenge удаления отдельного purpose, не подходит для login и наоборот. Идентичный успешный повтор verify не создаёт вторую сессию: при потере cookie пользователь запрашивает новый код. Список devices возвращает version для отзыва; при отзыве текущего cookie удаляется.
+Flow удаления отдельного purpose, не подходит для login/link и наоборот. Список devices возвращает version для отзыва; при отзыве текущего cookie удаляется. Регистрация и вход не используют общий протокол доменных команд; после потери ответа клиент проверяет auth/session. Повторная регистрация занятого логина — 409, не новый аккаунт. Email пока неподтверждённый и не используется для входа/сброса пароля.
+
+Будущие flows/identities/callback/webhook маршруты и правила привязки описаны в ADR-003. Telegram использует нашего бота; Яндекс/VK — самостоятельные OAuth адаптеры. DTO/маршруты добавляются при реализации соответствующей интеграции.
 
 ## Библиотека и программы
 

@@ -9,7 +9,7 @@
 | 1       | [EGO-18: Контракт API: OpenAPI и типы клиента](https://linear.app/egor-fogel/issue/EGO-18/kontrakt-api-openapi-i-tipy-klienta)                                                    | EGO-11                      |
 | 2       | [EGO-19: PostgreSQL: миграции, роли и готовность API](https://linear.app/egor-fogel/issue/EGO-19/postgresql-migracii-roli-i-gotovnost-api)                                        | EGO-11                      |
 | 3       | [EGO-20: Go worker: очередь PostgreSQL и безопасные повторы](https://linear.app/egor-fogel/issue/EGO-20/go-worker-ochered-postgresql-i-bezopasnye-povtory)                        | EGO-11                      |
-| 4       | [EGO-21: Доступ: email-коды, сессии и изоляция аккаунтов](https://linear.app/egor-fogel/issue/EGO-21/dostup-email-kody-sessii-i-izolyaciya-akkauntov)                             | EGO-11                      |
+| 4       | [EGO-21: Доступ: регистрация, пароль, сессии и изоляция аккаунтов](https://linear.app/egor-fogel/issue/EGO-21/dostup-registraciya-parol-sessii-i-izolyaciya-akkauntov)            | EGO-11                      |
 | 5       | [EGO-22: Инфраструктура: бюджетный хостинг и HTTPS-окружение](https://linear.app/egor-fogel/issue/EGO-22/infrastruktura-byudzhetnyj-hosting-i-https-okruzhenie)                   | EGO-17                      |
 | 6       | [EGO-8: PWA: проверить установку и Web Push на реальных устройствах](https://linear.app/egor-fogel/issue/EGO-8/pwa-proverit-ustanovku-i-web-push-na-realnyh-ustrojstvah)          | Ранняя техническая проверка |
 | 7       | [EGO-23: Библиотека упражнений: API, архивирование и источники техники](https://linear.app/egor-fogel/issue/EGO-23/biblioteka-uprazhnenij-api-arhivirovanie-i-istochniki-tehniki) | EGO-12                      |
@@ -28,3 +28,9 @@
 EGO-11–EGO-17 остаются этапами, конкретные задачи вложены в них. EGO-22 выполняется рано, хотя относится к инфраструктуре выпуска; финальная приёмка EGO-17 проводится после всего списка. Дневник может следовать за EGO-28, не ожидая завершения всего EGO-16: production напоминания EGO-32 идут позднее.
 
 Каждая задача содержит свой объём, критерии приёмки и зависимости в Linear. Продуктовые этапы включают подключённый к API интерфейс и проверку обеих тем, доступности и переходов. Завершение серверной части само по себе не закрывает пользовательский сценарий. Покупка хостинга, домена и сервисов требует выбора конкретного предложения; данный план не является заказом ресурсов.
+
+Уточнение доступа: [ADR-003](adr/003-authentication.md). Регистрация с почтой, логином и паролем без рассылки входит в EGO-21. Telegram/Яндекс/VK — будущий этап Backlog, не часть текущего прохода MVP и не блокируют парольный вход. Задачи внешних интеграций включаются в порядок отдельно после основного этапа.
+
+- [EGO-35: Telegram-бот](https://linear.app/egor-fogel/issue/EGO-35/dostup-vhod-i-privyazka-cherez-telegram-bota).
+- [EGO-36: Яндекс ID](https://linear.app/egor-fogel/issue/EGO-36/dostup-vhod-i-privyazka-cherez-yandeks-id).
+- [EGO-37: VK ID](https://linear.app/egor-fogel/issue/EGO-37/dostup-vhod-i-privyazka-cherez-vk-id).
