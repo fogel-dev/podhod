@@ -60,6 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PODHOD_SECRETS_DIR: /tmp/podhod-ci-secrets
+      COMPOSE_PROJECT_NAME: podhod
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -68,3 +69,15 @@ jobs:
       - run: node tooling/dev/secrets.mjs
       - run: docker compose config --quiet
       - run: docker compose build
+      - name: Проверка production Compose и конфигураций proxy/web
+        env:
+          PODHOD_DOMAIN: checks.example.invalid
+          PODHOD_STATE_DIR: /tmp/podhod-ci-state
+          PODHOD_API_IMAGE: podhod-api
+          PODHOD_WEB_IMAGE: podhod-web
+          PODHOD_PROXY_IMAGE: caddy:2.11.7-alpine
+          PODHOD_DB_IMAGE: postgres:18.6-alpine
+        run: |
+          docker compose -f compose.production.yaml config --quiet
+          docker run --rm -e PODHOD_DOMAIN="$PODHOD_DOMAIN" -v "$PWD/infra/Caddyfile:/etc/caddy/Caddyfile:ro" "$PODHOD_PROXY_IMAGE" caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --tmpfs /tmp:size=16m,mode=1777 -v "$PWD/infra/nginx.production.conf:/etc/nginx/podhod.conf:ro" --entrypoint nginx podhod-web -t -c /etc/nginx/podhod.conf

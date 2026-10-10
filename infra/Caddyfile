@@ -1,0 +1,19 @@
+{
+	admin off
+	http_port 8080
+	https_port 8443
+}
+
+{$PODHOD_DOMAIN} {
+	@api path /api/*
+	handle @api {
+		reverse_proxy api:8080
+	}
+	handle {
+		reverse_proxy web:8080
+	}
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+	}
+}
