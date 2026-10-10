@@ -13,7 +13,7 @@ import (
 func TestProgramRevisionsCopyMovesAndOwnership(t *testing.T) {
 	app := domaintest.New(t)
 	(&Service{app.Core, app.Auth}).RegisterRoutes(app.Mux)
-	(&exercises.Service{app.Core, app.Auth}).RegisterRoutes(app.Mux)
+	(&exercises.Service{Core: app.Core, Auth: app.Auth}).RegisterRoutes(app.Mux)
 	a := app.User(t, "first")
 	b := app.User(t, "second")
 	eid := id.New()
