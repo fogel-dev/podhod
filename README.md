@@ -70,4 +70,8 @@ docker compose up --build
 
 Схема FSD и причины выбора монорепозитория: [ADR-001](docs/adr/001-monorepo.md). Дизайн: [docs/design.md](docs/design.md). Статусы работы: [Linear](https://linear.app/egor-fogel/project/podhod-0fb97512cb40).
 
+Принятый проект бэкенда EGO-9: [модель данных и сценарии](docs/backend.md), [API](docs/api.md), [бюджетный деплой](docs/deployment.md), [ADR-002](docs/adr/002-backend.md). Эти документы описывают будущую реализацию; текущий API пока содержит только health endpoint.
+
+Задачи EGO-18–EGO-34 и ранняя проверка PWA EGO-8: [порядок реализации](docs/implementation-plan.md). Следующая задача — EGO-18, OpenAPI и типы клиента.
+
 После принятия задачи пользователем изменения коммитятся и отправляются в Git с русским описательным сообщением и номером Linear. До приёмки задача остаётся In Review.
