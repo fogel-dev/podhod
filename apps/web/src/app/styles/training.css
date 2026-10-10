@@ -64,6 +64,98 @@
   display: block;
   border-radius: 12px;
 }
+.metric {
+  margin: 27px 0 21px;
+}
+.progress-options summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+}
+.progress-options summary::after {
+  content: '⌄';
+  margin-left: auto;
+}
+.progress-options[open] summary::after {
+  content: '⌃';
+}
+.metric .small {
+  margin-bottom: 8px;
+}
+.big {
+  font-size: 50px;
+  font-weight: 550;
+  line-height: 1.15;
+  letter-spacing: -1.4px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.unit {
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--secondary);
+  letter-spacing: -0.3px;
+}
+.delta {
+  color: var(--accent);
+  font-size: 13px;
+  margin-top: 7px;
+}
+.chart {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  margin-bottom: 24px;
+}
+.chart text {
+  fill: var(--secondary);
+  font-size: 11px;
+  font-family: inherit;
+}
+.chart .gridline {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.chart .trend {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.chart circle {
+  fill: var(--accent);
+  stroke: var(--canvas);
+  stroke-width: 3;
+}
+.progress-table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+}
+.progress-table th {
+  color: var(--secondary);
+  font-weight: 400;
+  font-size: 12px;
+  padding: 12px 0;
+}
+.progress-table td {
+  border-top: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.progress-table td:last-child {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.progress-table .text-button {
+  padding-left: 0;
+  text-align: left;
+  font-size: 13px;
+}
 .photo-stack {
   position: relative;
   width: 26px;

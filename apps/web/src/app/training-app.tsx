@@ -102,7 +102,12 @@ export function TrainingApp({
             />
           )}
           {route.view === 'library' && <LibraryPage session={session} />}
-          {route.view === 'progress' && <ProgressPage />}
+          {route.view === 'progress' && (
+            <ProgressPage
+              timezone={session.user.timezone}
+              navigate={navigate}
+            />
+          )}
           {route.view === 'day' && (
             <DayPage
               date={route.date}
