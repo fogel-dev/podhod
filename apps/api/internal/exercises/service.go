@@ -1,6 +1,7 @@
 package exercises
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/fogel-dev/podhod/apps/api/internal/auth"
 	"github.com/fogel-dev/podhod/apps/api/internal/httpx"
@@ -42,6 +43,15 @@ func scan(row pgx.Row) (Exercise, error) {
 		err = json.Unmarshal(guide, &e.TechniqueGuide)
 	}
 	return e, err
+}
+
+type Reader interface {
+	QueryRow(context.Context, string, ...any) pgx.Row
+}
+
+// Load returns the library identity and reviewed technique for an owned exercise.
+func Load(ctx context.Context, db Reader, user, id string) (Exercise, error) {
+	return scan(db.QueryRow(ctx, `SELECT `+columns+` FROM exercises e WHERE e.user_id=$1 AND e.id=$2`, user, id))
 }
 func (s *Service) RegisterRoutes(m *http.ServeMux) {
 	m.HandleFunc("GET /api/v1/exercises", s.Auth.Require(s.list))

@@ -22,6 +22,7 @@ import (
 	"github.com/fogel-dev/podhod/apps/api/internal/journal"
 	"github.com/fogel-dev/podhod/apps/api/internal/media"
 	"github.com/fogel-dev/podhod/apps/api/internal/programs"
+	"github.com/fogel-dev/podhod/apps/api/internal/progress"
 	"github.com/fogel-dev/podhod/apps/api/internal/workouts"
 )
 
@@ -77,6 +78,7 @@ func run(logger *slog.Logger) error {
 	(&programs.Service{Core: core, Auth: access}).RegisterRoutes(server.Handler.(*http.ServeMux))
 	(&workouts.Service{Core: core, Auth: access}).RegisterRoutes(server.Handler.(*http.ServeMux))
 	(&journal.Service{Core: core, Auth: access}).RegisterRoutes(server.Handler.(*http.ServeMux))
+	(&progress.Service{Core: core, Auth: access}).RegisterRoutes(server.Handler.(*http.ServeMux))
 	mediaKey, _ := hex.DecodeString(key)
 	(&media.Service{Core: core, Auth: access, Store: disk, Queue: jobs.New(pool, cipher), Key: mediaKey}).RegisterRoutes(server.Handler.(*http.ServeMux))
 	done := make(chan error, 1)
