@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fogel-dev/podhod/apps/api/internal/auth"
 	"github.com/fogel-dev/podhod/apps/api/internal/config"
 	"github.com/fogel-dev/podhod/apps/api/internal/database"
 	"github.com/fogel-dev/podhod/apps/api/internal/httpserver"
@@ -36,11 +37,20 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	defer pool.Close()
+	key, err := config.Secret("AUTH_HMAC_KEY")
+	if err != nil {
+		return err
+	}
+	access, err := auth.New(pool, key, os.Getenv("PUBLIC_ORIGIN"), os.Getenv("AUTH_INSECURE_LOCAL") == "1", os.Getenv("TRUSTED_PROXY_CIDRS"))
+	if err != nil {
+		return err
+	}
 	listener, err := net.Listen("tcp", cfg.HTTPAddr)
 	if err != nil {
 		return err
 	}
 	server := httpserver.New(cfg.HTTPAddr, logger, database.Ready(pool))
+	access.RegisterRoutes(server.Handler.(*http.ServeMux))
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()
 	logger.Info("API listening", "address", listener.Addr().String())

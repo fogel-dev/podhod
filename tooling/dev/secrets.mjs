@@ -18,6 +18,7 @@ const values = {
   db_worker_password: password(),
   db_migration_password: password(),
   job_encryption_key: password(),
+  auth_hmac_key: password(),
 };
 for (const [name, value] of Object.entries(values)) {
   try {

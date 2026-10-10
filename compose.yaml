@@ -38,8 +38,12 @@ services:
     environment:
       HTTP_ADDR: 0.0.0.0:8080
       DATABASE_URL_FILE: /run/secrets/api_database_url
+      AUTH_HMAC_KEY_FILE: /run/secrets/auth_hmac_key
+      PUBLIC_ORIGIN: http://127.0.0.1:8080
+      AUTH_INSECURE_LOCAL: '1'
     secrets:
       - api_database_url
+      - auth_hmac_key
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -93,3 +97,5 @@ secrets:
     file: ${PODHOD_SECRETS_DIR}/worker_database_url
   job_encryption_key:
     file: ${PODHOD_SECRETS_DIR}/job_encryption_key
+  auth_hmac_key:
+    file: ${PODHOD_SECRETS_DIR}/auth_hmac_key

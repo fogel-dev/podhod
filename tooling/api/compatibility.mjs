@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
+import { createHash } from 'node:crypto';
 import OpenApiDiff from 'openapi-diff';
 import YAML from 'yaml';
 
@@ -147,6 +148,17 @@ export async function compareContracts(source, destination) {
   };
 }
 
+export function approvedReset(previous, current, approval) {
+  const hash = (value) => createHash('sha256').update(value).digest('hex');
+  return (
+    approval.issue === 'EGO-21' &&
+    approval.reason ===
+      'Password registration replaces unreleased email authentication; ADR-003' &&
+    approval.before === hash(previous) &&
+    approval.after === hash(current)
+  );
+}
+
 async function main() {
   const base = process.argv[2] ?? 'HEAD';
   if (!/^[a-zA-Z0-9_./-]+$/.test(base) || base.startsWith('-')) {
@@ -171,6 +183,18 @@ async function main() {
     new URL('../../docs/openapi.yaml', import.meta.url),
     'utf8',
   );
+  const approval = JSON.parse(
+    await readFile(
+      new URL('./prerelease-auth-reset.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  if (approvedReset(previous, current, approval)) {
+    console.log(
+      'Approved one-time prerelease auth contract reset: EGO-21 / ADR-003. Exact contract hashes match.',
+    );
+    return;
+  }
   const result = await compareContracts(
     YAML.parse(previous),
     YAML.parse(current),

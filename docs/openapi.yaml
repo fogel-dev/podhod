@@ -37,84 +37,6 @@ tags:
 security:
   - session: []
 paths:
-  /api/v1/auth/email/request:
-    post:
-      operationId: requestEmailCode
-      tags:
-        - Auth
-      summary: requestEmailCode
-      description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
-      parameters: []
-      responses:
-        '202':
-          description: Принято; фоновая операция продолжается
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Challenge'
-        '400':
-          $ref: '#/components/responses/Error400'
-        '413':
-          $ref: '#/components/responses/Error413'
-        '422':
-          $ref: '#/components/responses/Error422'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '500':
-          $ref: '#/components/responses/Error500'
-        '503':
-          $ref: '#/components/responses/Error503'
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EmailRequest'
-  /api/v1/auth/email/verify:
-    post:
-      operationId: verifyEmailCode
-      tags:
-        - Auth
-      summary: verifyEmailCode
-      description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
-      parameters: []
-      responses:
-        '200':
-          description: Успешно
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-          headers:
-            Set-Cookie:
-              schema:
-                type: string
-                maxLength: 1000
-              description: __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
-        '400':
-          $ref: '#/components/responses/Error400'
-        '413':
-          $ref: '#/components/responses/Error413'
-        '422':
-          $ref: '#/components/responses/Error422'
-        '429':
-          $ref: '#/components/responses/Error429'
-        '500':
-          $ref: '#/components/responses/Error500'
-        '503':
-          $ref: '#/components/responses/Error503'
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EmailVerify'
   /api/v1/auth/session:
     get:
       operationId: getSession
@@ -286,6 +208,8 @@ paths:
           $ref: '#/components/responses/Error409'
         '413':
           $ref: '#/components/responses/Error413'
+        '415':
+          $ref: '#/components/responses/Error415'
         '422':
           $ref: '#/components/responses/Error422'
         '428':
@@ -311,9 +235,7 @@ paths:
       description:
         Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
         ответа клиент игнорирует.
-      parameters:
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/Cursor'
+      parameters: []
       responses:
         '200':
           description: Успешно
@@ -3098,6 +3020,148 @@ paths:
         '503':
           $ref: '#/components/responses/Error503'
       security: []
+  /api/v1/auth/register:
+    post:
+      operationId: register
+      tags:
+        - Auth
+      summary: Регистрация без отправки писем
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '201':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                maxLength: 1000
+              description: __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '415':
+          $ref: '#/components/responses/Error415'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRegister'
+  /api/v1/auth/login:
+    post:
+      operationId: login
+      tags:
+        - Auth
+      summary: Вход по логину и паролю
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                maxLength: 1000
+              description: __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '415':
+          $ref: '#/components/responses/Error415'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordLogin'
+  /api/v1/auth/password/change:
+    post:
+      operationId: changePassword
+      tags:
+        - Auth
+      summary: Смена пароля с отзывом остальных сессий
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
+        ответа клиент игнорирует.
+      parameters:
+        - $ref: '#/components/parameters/Csrf'
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '415':
+          $ref: '#/components/responses/Error415'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
 components:
   securitySchemes:
     session:
@@ -3127,6 +3191,7 @@ components:
           type: string
           format: email
           maxLength: 254
+          nullable: true
         timezone:
           type: string
           minLength: 1
@@ -3135,6 +3200,13 @@ components:
         locale:
           type: string
           maxLength: 20
+        login: &a1
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: ^[a-zA-Z][a-zA-Z0-9_]{2,31}$
+        emailVerified:
+          type: boolean
       required:
         - id
         - version
@@ -3143,6 +3215,8 @@ components:
         - email
         - timezone
         - locale
+        - login
+        - emailVerified
     Device:
       type: object
       additionalProperties: false
@@ -3187,7 +3261,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Device'
-          maxItems: 100
+          maxItems: 20
           minItems: 0
         nextCursor:
           type: string
@@ -3197,55 +3271,19 @@ components:
       required:
         - items
         - nextCursor
-    EmailRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        email:
-          type: string
-          format: email
-          maxLength: 254
-      required:
-        - email
     Challenge:
       type: object
       additionalProperties: false
       properties:
-        challengeId:
+        flowId:
           type: string
           format: uuid
         expiresAt:
           type: string
           format: date-time
-        retryAfterSeconds:
-          type: integer
-          minimum: 0
-          maximum: 600
       required:
-        - challengeId
+        - flowId
         - expiresAt
-        - retryAfterSeconds
-    EmailVerify:
-      type: object
-      additionalProperties: false
-      properties:
-        challengeId:
-          type: string
-          format: uuid
-        code:
-          type: string
-          pattern: ^[0-9]{8}$
-        deviceLabel:
-          type: string
-          maxLength: 120
-          minLength: 1
-        deviceId:
-          type: string
-          format: uuid
-      required:
-        - challengeId
-        - code
-        - deviceLabel
     Session:
       type: object
       additionalProperties: false
@@ -3278,20 +3316,18 @@ components:
         locale:
           type: string
           maxLength: 20
+          enum:
+            - ru
       minProperties: 1
     DeleteConfirm:
       type: object
       additionalProperties: false
       properties:
-        challengeId:
+        flowId:
           type: string
           format: uuid
-        code:
-          type: string
-          pattern: ^[0-9]{8}$
       required:
-        - challengeId
-        - code
+        - flowId
     Export:
       type: object
       additionalProperties: false
@@ -5991,6 +6027,56 @@ components:
             - ok
       required:
         - status
+    PasswordRegister:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        login: *a1
+        password: &a2
+          type: string
+          minLength: 15
+          maxLength: 128
+          writeOnly: true
+        passwordConfirmation: *a2
+        deviceLabel:
+          type: string
+          minLength: 1
+          maxLength: 120
+      required:
+        - email
+        - login
+        - password
+        - passwordConfirmation
+        - deviceLabel
+    PasswordLogin:
+      type: object
+      additionalProperties: false
+      properties:
+        login: *a1
+        password: *a2
+        deviceLabel:
+          type: string
+          minLength: 1
+          maxLength: 120
+      required:
+        - login
+        - password
+        - deviceLabel
+    PasswordChange:
+      type: object
+      additionalProperties: false
+      properties:
+        currentPassword: *a2
+        password: *a2
+        passwordConfirmation: *a2
+      required:
+        - currentPassword
+        - password
+        - passwordConfirmation
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
@@ -6044,7 +6130,7 @@ components:
       description: Некорректный JSON/структура
       content:
         application/json:
-          schema:
+          schema: &a3
             $ref: '#/components/schemas/ErrorEnvelope'
     Error401:
       description: Нужен вход
@@ -6089,11 +6175,10 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
     Error428:
-      description: Отсутствует If-Match
+      description: Требуется версия
       content:
         application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
+          schema: *a3
     Error429:
       description: Лимит запросов
       content:
@@ -6119,3 +6204,8 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
+    Error415:
+      description: Неподдерживаемый тип содержимого
+      content:
+        application/json:
+          schema: *a3

@@ -1,0 +1,6 @@
+{
+  "issue": "EGO-21",
+  "reason": "Password registration replaces unreleased email authentication; ADR-003",
+  "before": "d9f0e59fc8e8bb1f25b013214920488441c2a54b7c3afd13d96626cbf2ec7407",
+  "after": "4fff047cf1dc786e6b12817bb7e50ceeeb9d855a733566faf026cc7087fdbd23"
+}

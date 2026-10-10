@@ -43,7 +43,7 @@ func TestMigrationsAndPermissions(t *testing.T) {
 		t.Fatalf("migrations count=%d err=%v", count, err)
 	}
 	_, err = conn.Exec(ctx, `SET ROLE podhod_api;
-		INSERT INTO users(id,email_normalized) VALUES('00000000-0000-4000-8000-000000000001','one@test.invalid'),('00000000-0000-4000-8000-000000000002','two@test.invalid');
+		INSERT INTO users(id,login_normalized,email_normalized) VALUES('00000000-0000-4000-8000-000000000001','test_one','one@test.invalid'),('00000000-0000-4000-8000-000000000002','test_two','two@test.invalid');
 		INSERT INTO devices(id,user_id,label) VALUES('00000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000001','test')`)
 	if err != nil {
 		t.Fatal(err)

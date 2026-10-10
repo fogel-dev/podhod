@@ -1,45 +1,5 @@
 // Generated from docs/openapi.yaml. Run npm run api:generate; do not edit.
 export interface paths {
-  '/api/v1/auth/email/request': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * requestEmailCode
-     * @description Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля ответа клиент игнорирует.
-     */
-    post: operations['requestEmailCode'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/email/verify': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * verifyEmailCode
-     * @description Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля ответа клиент игнорирует.
-     */
-    post: operations['verifyEmailCode'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/auth/session': {
     parameters: {
       query?: never;
@@ -1000,6 +960,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/auth/register': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Регистрация без отправки писем
+     * @description Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля ответа клиент игнорирует.
+     */
+    post: operations['register'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Вход по логину и паролю
+     * @description Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля ответа клиент игнорирует.
+     */
+    post: operations['login'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/password/change': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Смена пароля с отзывом остальных сессий
+     * @description Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля ответа клиент игнорирует.
+     */
+    post: operations['changePassword'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1013,10 +1033,12 @@ export interface components {
       /** Format: date-time */
       updatedAt: string;
       /** Format: email */
-      email: string;
+      email: string | null;
       /** @description IANA timezone; сервер проверяет существование в tzdata. */
       timezone: string;
       locale: string;
+      login: string;
+      emailVerified: boolean;
     };
     Device: {
       /** Format: uuid */
@@ -1036,24 +1058,11 @@ export interface components {
       items: components['schemas']['Device'][];
       nextCursor: string | null;
     };
-    EmailRequest: {
-      /** Format: email */
-      email: string;
-    };
     Challenge: {
       /** Format: uuid */
-      challengeId: string;
+      flowId: string;
       /** Format: date-time */
       expiresAt: string;
-      retryAfterSeconds: number;
-    };
-    EmailVerify: {
-      /** Format: uuid */
-      challengeId: string;
-      code: string;
-      deviceLabel: string;
-      /** Format: uuid */
-      deviceId?: string;
     };
     Session: {
       user: components['schemas']['User'];
@@ -1066,12 +1075,12 @@ export interface components {
     UserPatch: {
       /** @description IANA timezone; сервер проверяет существование в tzdata. */
       timezone?: string;
-      locale?: string;
+      /** @enum {string} */
+      locale?: 'ru';
     };
     DeleteConfirm: {
       /** Format: uuid */
-      challengeId: string;
-      code: string;
+      flowId: string;
     };
     Export: {
       /** Format: uuid */
@@ -2076,6 +2085,24 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    PasswordRegister: {
+      /** Format: email */
+      email: string;
+      login: string;
+      password: string;
+      passwordConfirmation: string;
+      deviceLabel: string;
+    };
+    PasswordLogin: {
+      login: string;
+      password: string;
+      deviceLabel: string;
+    };
+    PasswordChange: {
+      currentPassword: string;
+      password: string;
+      passwordConfirmation: string;
+    };
   };
   responses: {
     /** @description Некорректный JSON/структура */
@@ -2150,7 +2177,7 @@ export interface components {
         'application/json': components['schemas']['ErrorEnvelope'];
       };
     };
-    /** @description Отсутствует If-Match */
+    /** @description Требуется версия */
     Error428: {
       headers: {
         [name: string]: unknown;
@@ -2188,6 +2215,15 @@ export interface components {
         'application/json': components['schemas']['ErrorEnvelope'];
       };
     };
+    /** @description Неподдерживаемый тип содержимого */
+    Error415: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['ErrorEnvelope'];
+      };
+    };
   };
   parameters: {
     /** @description ID команды; одинаковый ID+payload возвращает первоначальный результат. */
@@ -2207,68 +2243,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  requestEmailCode: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['EmailRequest'];
-      };
-    };
-    responses: {
-      /** @description Принято; фоновая операция продолжается */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Challenge'];
-        };
-      };
-      400: components['responses']['Error400'];
-      413: components['responses']['Error413'];
-      422: components['responses']['Error422'];
-      429: components['responses']['Error429'];
-      500: components['responses']['Error500'];
-      503: components['responses']['Error503'];
-    };
-  };
-  verifyEmailCode: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['EmailVerify'];
-      };
-    };
-    responses: {
-      /** @description Успешно */
-      200: {
-        headers: {
-          /** @description __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000 */
-          'Set-Cookie'?: string;
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['Session'];
-        };
-      };
-      400: components['responses']['Error400'];
-      413: components['responses']['Error413'];
-      422: components['responses']['Error422'];
-      429: components['responses']['Error429'];
-      500: components['responses']['Error500'];
-      503: components['responses']['Error503'];
-    };
-  };
   getSession: {
     parameters: {
       query?: never;
@@ -2407,6 +2381,7 @@ export interface operations {
       404: components['responses']['Error404'];
       409: components['responses']['Error409'];
       413: components['responses']['Error413'];
+      415: components['responses']['Error415'];
       422: components['responses']['Error422'];
       428: components['responses']['Error428'];
       429: components['responses']['Error429'];
@@ -2416,10 +2391,7 @@ export interface operations {
   };
   listDevices: {
     parameters: {
-      query?: {
-        limit?: components['parameters']['Limit'];
-        cursor?: components['parameters']['Cursor'];
-      };
+      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
@@ -4461,6 +4433,114 @@ export interface operations {
       };
       400: components['responses']['Error400'];
       413: components['responses']['Error413'];
+      422: components['responses']['Error422'];
+      429: components['responses']['Error429'];
+      500: components['responses']['Error500'];
+      503: components['responses']['Error503'];
+    };
+  };
+  register: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordRegister'];
+      };
+    };
+    responses: {
+      /** @description Успешно */
+      201: {
+        headers: {
+          /** @description __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000 */
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Session'];
+        };
+      };
+      400: components['responses']['Error400'];
+      401: components['responses']['Error401'];
+      403: components['responses']['Error403'];
+      409: components['responses']['Error409'];
+      413: components['responses']['Error413'];
+      415: components['responses']['Error415'];
+      422: components['responses']['Error422'];
+      429: components['responses']['Error429'];
+      500: components['responses']['Error500'];
+      503: components['responses']['Error503'];
+    };
+  };
+  login: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordLogin'];
+      };
+    };
+    responses: {
+      /** @description Успешно */
+      200: {
+        headers: {
+          /** @description __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000 */
+          'Set-Cookie'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Session'];
+        };
+      };
+      400: components['responses']['Error400'];
+      401: components['responses']['Error401'];
+      403: components['responses']['Error403'];
+      409: components['responses']['Error409'];
+      413: components['responses']['Error413'];
+      415: components['responses']['Error415'];
+      422: components['responses']['Error422'];
+      429: components['responses']['Error429'];
+      500: components['responses']['Error500'];
+      503: components['responses']['Error503'];
+    };
+  };
+  changePassword: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Токен текущей сессии. Также обязательна проверка Origin. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordChange'];
+      };
+    };
+    responses: {
+      /** @description Успешно */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components['responses']['Error400'];
+      401: components['responses']['Error401'];
+      403: components['responses']['Error403'];
+      404: components['responses']['Error404'];
+      409: components['responses']['Error409'];
+      413: components['responses']['Error413'];
+      415: components['responses']['Error415'];
       422: components['responses']['Error422'];
       429: components['responses']['Error429'];
       500: components['responses']['Error500'];
