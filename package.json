@@ -23,7 +23,7 @@
     "api:compatibility": "node tooling/api/compatibility.mjs",
     "api:test": "node --test tooling/api/*.test.mjs",
     "api:check": "npm run api:lint && node tooling/api/generate.mjs --check && npm run api:test",
-    "check": "npm run api:check && npm run typecheck && npm run lint && npm run test:architecture --workspace @podhod/web && npm run format:check"
+    "check": "npm run api:check && npm run typecheck && npm run lint && npm run test:architecture --workspace @podhod/web && npm run test:frontend --workspace @podhod/web && npm run format:check"
   },
   "devDependencies": {
     "@redocly/cli": "2.62.1",

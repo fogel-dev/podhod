@@ -9,7 +9,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings 0",
-    "test:architecture": "node --test tooling/fsd-rule.test.js"
+    "test:architecture": "node --test tooling/fsd-rule.test.js",
+    "test:frontend": "node --experimental-strip-types --test tooling/frontend.test.js"
   },
   "dependencies": {
     "react": "19.3.0",

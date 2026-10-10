@@ -4,6 +4,7 @@ import type { Program, ProgramRevisionInput } from '@/entities/program';
 import type { Exercise, PlanExerciseInput } from '@/entities/exercise';
 import type { WriteContext } from '@/shared/api';
 import { useAction } from '@/shared/lib/action';
+import { useUnsavedChanges } from '@/shared/lib/unsaved';
 import {
   addDays,
   dateLabel,
@@ -78,6 +79,9 @@ export function ProgramEditor({
   const [picker, setPicker] = useState(false);
   const [copying, setCopying] = useState(false);
   const [targets, setTargets] = useState<number[]>([]);
+  const fingerprint = JSON.stringify([name, start, end, effective, zone, days]);
+  const [baseline] = useState(fingerprint);
+  const guard = useUnsavedChanges(fingerprint !== baseline);
   const action = useAction();
   const activeDay = days.find((day) => day.weekday === selected) ?? days[0];
   function updateExercises(
@@ -162,6 +166,7 @@ export function ProgramEditor({
                     name: name.trim(),
                     revision,
                   });
+              guard.release();
               onSaved(saved);
             });
           }}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PasswordForm } from '@/features/password-auth';
 import { DevicesSettings, TimezoneSettings } from '@/features/account-settings';
+import { AppAvailability } from '@/features/app-availability';
 import { logout } from '@/entities/user';
 import type { Session } from '@/entities/user';
 import { ApiError } from '@/shared/api';
@@ -34,6 +35,7 @@ export function AccountPage({
         </p>
       </section>
       <TimezoneSettings session={session} onChanged={onChanged} />
+      <AppAvailability />
       <PasswordForm session={session} onChanged={onChanged} />
       <DevicesSettings session={session} onChanged={onChanged} />
       <p role="alert" className="form-message">

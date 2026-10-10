@@ -8,6 +8,7 @@ import type { Exercise } from '@/entities/exercise';
 import type { WriteContext } from '@/shared/api';
 import { useResource } from '@/shared/lib/resource';
 import { useAction } from '@/shared/lib/action';
+import { useUnsavedChanges } from '@/shared/lib/unsaved';
 import { Empty, ResourceState } from '@/shared/ui/kit';
 export function ExerciseLibrary({
   context,
@@ -24,6 +25,9 @@ export function ExerciseLibrary({
   const [note, setNote] = useState('');
   const [id, setId] = useState(() => crypto.randomUUID());
   const action = useAction();
+  useUnsavedChanges(
+    form && (name !== (editing?.name ?? '') || note !== (editing?.note ?? '')),
+  );
   const load = useCallback(
     (signal: AbortSignal) => listExercises(query, archived, signal),
     [query, archived],

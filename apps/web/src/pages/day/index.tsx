@@ -51,6 +51,7 @@ export function DayPage({
               <ScheduleChange
                 plan={plan}
                 context={session}
+                timezone={session.user.timezone}
                 onChanged={resource.reload}
               />
             </div>

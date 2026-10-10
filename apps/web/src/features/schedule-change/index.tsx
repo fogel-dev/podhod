@@ -4,14 +4,17 @@ import type { PlanOccurrence } from '@/entities/calendar';
 import { write } from '@/shared/api';
 import type { WriteContext } from '@/shared/api';
 import { useAction } from '@/shared/lib/action';
+import { today } from '@/shared/lib/date';
 import { Dialog } from '@/shared/ui/dialog';
 export function ScheduleChange({
   plan,
   context,
+  timezone,
   onChanged,
 }: {
   plan: PlanOccurrence;
   context: WriteContext;
+  timezone: string;
   onChanged: () => void;
 }) {
   const [moving, setMoving] = useState(false);
@@ -102,7 +105,7 @@ export function ScheduleChange({
               <input
                 type="date"
                 required
-                min={plan.sourceDate}
+                min={today(timezone)}
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
               />

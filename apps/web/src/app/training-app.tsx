@@ -11,7 +11,9 @@ import { WorkoutPage } from '@/pages/workout';
 import { getActiveWorkout } from '@/entities/workout';
 import { useResource } from '@/shared/lib/resource';
 import type { Session } from '@/entities/user';
-import type { Route, Tab } from '@/shared/lib/navigation';
+import type { Tab } from '@/shared/lib/navigation';
+import { routeHash, scrollPositions, useNavigation } from './navigation';
+import { today } from '@/shared/lib/date';
 import { Brand } from '@/shared/ui/brand';
 import { Icon } from '@/shared/ui/kit';
 
@@ -30,25 +32,37 @@ export function TrainingApp({
   onChanged: () => Promise<void>;
   onLogout: () => void;
 }) {
-  const [route, setRoute] = useState<Route>({ view: 'today' });
-  const [tab, setTab] = useState<Tab>('today');
-  const stack = useRef<Route[]>([]);
+  const { route, tab, navigate, back } = useNavigation();
+  const [months, setMonths] = useState({
+    today: today(session.user.timezone).slice(0, 7),
+    calendar: today(session.user.timezone).slice(0, 7),
+  });
   const main = useRef<HTMLElement>(null);
   const loadActive = useCallback(
     (signal: AbortSignal) => getActiveWorkout(signal),
     [],
   );
   const active = useResource(`active:${JSON.stringify(route)}`, loadActive);
-  function navigate(next: Route) {
-    stack.current.push(route);
-    setRoute(next);
-    if (tabs.some((item) => item.view === next.view)) setTab(next.view as Tab);
-  }
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    main.current
-      ?.querySelector<HTMLElement>('h1')
-      ?.focus({ preventScroll: true });
+    const target = scrollPositions.get(routeHash(route)) ?? 0;
+    let focused = false;
+    const restore = () => {
+      const heading = main.current?.querySelector<HTMLElement>('h1');
+      if (heading && !focused) {
+        heading.focus({ preventScroll: true });
+        focused = true;
+      }
+      window.scrollTo({ top: target, behavior: 'instant' });
+      if (
+        focused &&
+        document.documentElement.scrollHeight >= target + innerHeight
+      )
+        observer.disconnect();
+    };
+    const observer = new ResizeObserver(restore);
+    if (main.current) observer.observe(main.current);
+    restore();
+    return () => observer.disconnect();
   }, [route]);
   const detail = !tabs.some((item) => item.view === route.view);
   return (
@@ -70,10 +84,7 @@ export function TrainingApp({
           key={JSON.stringify(route)}
         >
           {detail && (
-            <button
-              className="back text-button"
-              onClick={() => setRoute(stack.current.pop() ?? { view: tab })}
-            >
+            <button className="back text-button" onClick={back}>
               <Icon name="back" /> Назад
             </button>
           )}
@@ -82,6 +93,10 @@ export function TrainingApp({
               session={session}
               timezone={session.user.timezone}
               navigate={navigate}
+              month={months.today}
+              onMonth={(month) =>
+                setMonths((current) => ({ ...current, today: month }))
+              }
             />
           )}
           {route.view === 'calendar' && (
@@ -89,6 +104,10 @@ export function TrainingApp({
               session={session}
               timezone={session.user.timezone}
               navigate={navigate}
+              month={months.calendar}
+              onMonth={(month) =>
+                setMonths((current) => ({ ...current, calendar: month }))
+              }
             />
           )}
           {route.view === 'program' && (
@@ -149,11 +168,7 @@ export function TrainingApp({
           <button
             key={item.view}
             aria-current={tab === item.view ? 'page' : undefined}
-            onClick={() => {
-              stack.current = [];
-              setTab(item.view);
-              setRoute({ view: item.view });
-            }}
+            onClick={() => navigate({ view: item.view })}
           >
             <Icon name={item.view} />
             <span>{item.label}</span>

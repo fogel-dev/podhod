@@ -11,6 +11,7 @@ import type { WriteContext } from '@/shared/api';
 import { useResource } from '@/shared/lib/resource';
 import { useAction } from '@/shared/lib/action';
 import { useObjectUrl } from '@/shared/lib/object-url';
+import { useUnsavedChanges } from '@/shared/lib/unsaved';
 import { dateLabel } from '@/shared/lib/date';
 import { Dialog } from '@/shared/ui/dialog';
 import { ResourceState } from '@/shared/ui/kit';
@@ -36,6 +37,7 @@ export function PhotoGallery({
   const input = useRef<HTMLInputElement>(null);
   const action = useAction();
   const preview = useObjectUrl(file);
+  useUnsavedChanges(!!file || action.busy);
   const processing = resource.data?.items.some(
     (photo) => photo.status === 'processing',
   );

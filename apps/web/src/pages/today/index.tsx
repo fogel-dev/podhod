@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { getDay, planStatus } from '@/entities/calendar';
 import type { Session } from '@/entities/user';
 import { MonthCalendar } from '@/widgets/month-calendar';
@@ -10,18 +10,24 @@ export function TodayPage({
   session,
   timezone,
   navigate,
+  month,
+  onMonth,
 }: {
   session: Session;
   timezone: string;
   navigate: Navigate;
+  month: string;
+  onMonth: (month: string) => void;
 }) {
   const date = today(timezone);
-  const [month, setMonth] = useState(date.slice(0, 7));
   const load = useCallback(
     (signal: AbortSignal) => getDay(date, signal),
     [date],
   );
   const resource = useResource(date, load);
+  const workout =
+    resource.data?.workouts.find((value) => value.status === 'active') ??
+    resource.data?.workouts.find((value) => value.status === 'completed');
   return (
     <>
       <PageTitle title="Сегодня" subtitle={dateLabel(date)} />
@@ -48,16 +54,26 @@ export function TodayPage({
           </p>
           <button
             className="primary"
-            onClick={() => navigate({ view: 'day', date })}
+            onClick={() =>
+              workout
+                ? navigate({ view: 'workout', id: workout.id })
+                : navigate({ view: 'day', date })
+            }
           >
-            Открыть день
+            {workout?.status === 'active'
+              ? 'Продолжить тренировку'
+              : workout
+                ? 'Посмотреть результат'
+                : resource.data.plans.some((p) => p.status === 'planned')
+                  ? 'Открыть тренировку'
+                  : 'Открыть день'}
           </button>
         </section>
       )}
       <MonthCalendar
         context={session}
         month={month}
-        onMonth={setMonth}
+        onMonth={onMonth}
         currentDate={date}
         onDay={(value) => navigate({ view: 'day', date: value })}
       />

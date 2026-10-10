@@ -5,6 +5,7 @@ import type { WriteContext } from '@/shared/api';
 import { useAction } from '@/shared/lib/action';
 import { useResource } from '@/shared/lib/resource';
 import { useElapsed } from '@/shared/lib/timer';
+import { useUnsavedChanges } from '@/shared/lib/unsaved';
 import { dateLabel, duration } from '@/shared/lib/date';
 import type { Navigate } from '@/shared/lib/navigation';
 import { Dialog } from '@/shared/ui/dialog';
@@ -164,6 +165,7 @@ export function WorkoutSession({
   const pending = useRef<WorkoutCommand | null>(null);
   const [unconfirmed, setUnconfirmed] = useState(false);
   const action = useAction();
+  useUnsavedChanges(unconfirmed || action.busy);
   const exercises = workout.currentRevision.exercises;
   const allSets = exercises.flatMap((exercise) => exercise.sets);
   const nextSet =
@@ -268,7 +270,10 @@ export function WorkoutSession({
           </div>
         </section>
       )}
-      <div className={`exercise-list ${rest ? 'with-rest' : ''}`}>
+      <div
+        className={`exercise-list ${selected ? 'exercise-detail' : ''}`}
+        key={selected?.id ?? 'all'}
+      >
         {(selected ? [selected] : exercises).map((exercise) => (
           <article className="exercise-card" key={exercise.id}>
             <div className="row">

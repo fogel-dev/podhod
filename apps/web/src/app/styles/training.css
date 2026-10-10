@@ -52,6 +52,52 @@
 .screen h1:focus {
   outline: none;
 }
+.training-app {
+  padding-inline: max(20px, env(safe-area-inset-left))
+    max(20px, env(safe-area-inset-right));
+}
+.training-app:has(.active-workout-link) {
+  padding-bottom: calc(180px + env(safe-area-inset-bottom));
+}
+.screen:has(.rest-dock) {
+  padding-bottom: 215px;
+}
+.exercise-detail {
+  animation: detail-enter var(--duration-screen) var(--ease);
+}
+.set:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+.set.completed:disabled {
+  opacity: 1;
+}
+.training-app button:disabled {
+  cursor: default;
+}
+.photo-stack .photo-unavailable {
+  min-height: 17px;
+}
+.photo-stack .photo-image:nth-child(2) {
+  z-index: 0;
+}
+.photo-stack .photo-image:first-child {
+  z-index: 1;
+}
+.stack-count {
+  z-index: 2;
+}
+.calendar-grid {
+  animation: calendar-enter 220ms var(--ease);
+}
+@keyframes calendar-enter {
+  from {
+    transform: translateY(4px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
 .exercise-weight {
   font-size: 16px;
   white-space: nowrap;

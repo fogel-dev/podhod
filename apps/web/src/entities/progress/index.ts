@@ -30,9 +30,4 @@ export const unitLabels = {
   reps: 'повторений',
   kg_reps: 'кг × повторения',
 };
-export function decimalLabel(value: string | null) {
-  if (value === null) return '—';
-  const [integer = '0', fraction] = value.split('.');
-  const tail = fraction?.replace(/0+$/, '');
-  return BigInt(integer).toLocaleString('ru') + (tail ? `,${tail}` : '');
-}
+export { decimalLabel } from '@/shared/lib/decimal';
