@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AccessPage } from '@/pages/access';
-import { AccountPage } from '@/pages/account';
+import { TrainingApp } from './training-app';
 import { getSession } from '@/entities/user';
 import type { Session } from '@/entities/user';
 import { ApiError } from '@/shared/api';
@@ -60,7 +60,7 @@ export function App() {
       </main>
     );
   return session ? (
-    <AccountPage
+    <TrainingApp
       key={session.user.id}
       session={session}
       onChanged={refresh}

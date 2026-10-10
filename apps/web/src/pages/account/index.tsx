@@ -10,20 +10,22 @@ export function AccountPage({
   session,
   onChanged,
   onLogout,
+  embedded = false,
 }: {
   session: Session;
   onChanged: () => Promise<void>;
   onLogout: () => void;
+  embedded?: boolean;
 }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   return (
-    <main className="account-page">
+    <div className={embedded ? 'account-embedded' : 'account-page'}>
       <header className="page-header">
-        <Brand />
+        {!embedded && <Brand />}
         <ThemeControl />
       </header>
-      <h1>Аккаунт</h1>
+      <h1 tabIndex={-1}>Настройки</h1>
       <section className="settings-section">
         <h2>{session.user.login}</h2>
         <p className="account-email">{session.user.email}</p>
@@ -61,6 +63,6 @@ export function AccountPage({
       >
         {busy ? 'Выходим…' : 'Выйти из аккаунта'}
       </button>
-    </main>
+    </div>
   );
 }

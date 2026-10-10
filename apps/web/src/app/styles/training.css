@@ -1,0 +1,315 @@
+.training-app {
+  max-width: 460px;
+  min-height: 100dvh;
+  margin: auto;
+  padding: max(18px, env(safe-area-inset-top)) 20px
+    calc(110px + env(safe-area-inset-bottom));
+}
+.training-app button {
+  touch-action: manipulation;
+}
+.training-app .brand {
+  font-size: 21px;
+  letter-spacing: -0.6px;
+}
+.app-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.icon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+.round-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--secondary);
+  cursor: pointer;
+}
+.round-icon:hover {
+  background: var(--tint);
+}
+.screen {
+  position: relative;
+  background: var(--canvas);
+  min-height: 65dvh;
+}
+.detail-screen {
+  animation: detail-enter var(--duration-screen) var(--ease);
+}
+@keyframes detail-enter {
+  from {
+    transform: translateX(18px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.screen-header {
+  margin-bottom: 22px;
+}
+.eyebrow,
+.muted {
+  color: var(--secondary);
+}
+.eyebrow {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.small {
+  font-size: 13px;
+}
+.surface {
+  padding: 20px;
+  border-radius: var(--radius-surface);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+  transition: background-color var(--duration-theme);
+}
+.section {
+  margin-top: 25px;
+}
+.training-card h2 {
+  font-size: 26px;
+  letter-spacing: -0.6px;
+  margin: 9px 0;
+}
+.training-card .primary {
+  margin-top: 19px;
+}
+.training-app .primary {
+  width: 100%;
+  min-height: 48px;
+  font-size: 14px;
+}
+.training-app .back {
+  display: flex;
+  align-items: center;
+  padding-left: 0;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.wide {
+  width: 100%;
+}
+.state-message {
+  padding: 22px 0;
+  font-size: 14px;
+  color: var(--secondary);
+}
+.empty-state {
+  padding: 22px 0 30px;
+  display: grid;
+  gap: 12px;
+}
+.empty-state h2 {
+  font-size: 22px;
+}
+.month-calendar {
+  margin-top: 25px;
+}
+.monthhead {
+  margin-bottom: 15px;
+}
+.monthhead h2 {
+  text-transform: capitalize;
+}
+.month-actions {
+  gap: 0;
+  color: var(--accent);
+}
+.month-actions .round-icon {
+  color: var(--accent);
+}
+.week,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.week {
+  font-size: 11px;
+  color: var(--secondary);
+  text-align: center;
+  margin-bottom: 8px;
+}
+.calendar-day {
+  min-height: 60px;
+  border: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.calendar-day:hover {
+  background: var(--tint);
+}
+.num {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.today .num {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+.day-markers {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.dot,
+.note-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.dot.missed {
+  background: transparent;
+  box-shadow: 0 0 0 1px var(--secondary);
+}
+.note-dot {
+  background: var(--secondary);
+}
+.calendar-check {
+  color: var(--accent);
+  font-size: 12px;
+}
+.photo-count {
+  font-size: 8px;
+  color: var(--secondary);
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 11px;
+  color: var(--secondary);
+  margin-top: 9px;
+}
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 460px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: var(--paper);
+  border-radius: 22px 22px 0 0;
+  box-shadow: var(--nav-shadow);
+  z-index: 10;
+}
+.bottom-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  min-height: 49px;
+  font-size: 10px;
+  color: var(--secondary);
+  cursor: pointer;
+}
+.bottom-nav button[aria-current='page'] {
+  color: var(--accent);
+}
+.bottom-nav .icon {
+  width: 23px;
+  height: 23px;
+}
+.preserve-lines {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.account-embedded .page-header {
+  margin-bottom: 24px;
+  justify-content: flex-end;
+}
+.training-app input,
+.training-app select,
+.training-app textarea {
+  min-height: 48px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+}
+.training-app textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+.field {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  font-size: 13px;
+  color: var(--secondary);
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.actions > * {
+  flex: 1;
+}
+@media (max-width: 350px) {
+  .training-app {
+    padding-inline: 16px;
+  }
+  .training-app h1 {
+    font-size: 30px;
+  }
+  .week,
+  .calendar-grid {
+    margin-inline: -10px;
+  }
+  .monthhead h2 {
+    font-size: 20px;
+  }
+}
