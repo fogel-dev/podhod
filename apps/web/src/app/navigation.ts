@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Route, Tab } from '@/shared/lib/navigation';
 export const tabNames: Tab[] = ['today', 'calendar', 'program', 'progress'];
 export function routeHash(route: Route) {
@@ -29,17 +29,18 @@ export function parseRoute(hash: string): Route {
   return { view: 'today' };
 }
 export const scrollPositions = new Map<string, number>();
-function canLeave() {
+async function canLeave(confirm: (message: string) => Promise<boolean>) {
   return (
     window.dispatchEvent(
       new Event('podhod:before-navigate', { cancelable: true }),
     ) ||
-    window.confirm(
+    (await confirm(
       'Есть несохранённые изменения. Покинуть экран и потерять их?',
-    )
+    ))
   );
 }
-export function useNavigation() {
+export function useNavigation(confirm: (message: string) => Promise<boolean>) {
+  const pending = useRef(false);
   const [frame, setFrame] = useState(() => {
     const route = parseRoute(location.hash);
     const tab = tabNames.includes(route.view as Tab)
@@ -63,17 +64,51 @@ export function useNavigation() {
       '',
       routeHash(frame.route),
     );
-    function pop() {
+    let restored: (() => void) | null = null;
+    let approved = false;
+    let active = true;
+    async function pop() {
+      if (restored) {
+        const resolve = restored;
+        restored = null;
+        resolve();
+        return;
+      }
       if (routeHash(parseRoute(location.hash)) === routeHash(frame.route))
         return;
       const nextIndex =
         typeof history.state?.index === 'number'
           ? (history.state.index as number)
           : 0;
-      if (!canLeave()) {
-        history.go(frame.index - nextIndex || 1);
+      if (
+        !approved &&
+        !window.dispatchEvent(
+          new Event('podhod:before-navigate', { cancelable: true }),
+        )
+      ) {
+        if (pending.current) return;
+        pending.current = true;
+        const delta = frame.index - nextIndex || 1;
+        await new Promise<void>((resolve) => {
+          restored = resolve;
+          history.go(delta);
+        });
+        if (!active) {
+          pending.current = false;
+          return;
+        }
+        const accepted = await confirm(
+          'Есть несохранённые изменения. Покинуть экран и потерять их?',
+        );
+        pending.current = false;
+        if (!active) return;
+        if (accepted) {
+          approved = true;
+          history.go(-delta);
+        }
         return;
       }
+      approved = false;
       scrollPositions.set(routeHash(frame.route), window.scrollY);
       const route = parseRoute(location.hash);
       const tab = tabNames.includes(route.view as Tab)
@@ -82,10 +117,18 @@ export function useNavigation() {
       setFrame({ route, tab, index: nextIndex });
     }
     window.addEventListener('popstate', pop);
-    return () => window.removeEventListener('popstate', pop);
-  }, [frame]);
-  function navigate(route: Route) {
-    if (routeHash(route) === routeHash(frame.route) || !canLeave()) return;
+    return () => {
+      active = false;
+      restored?.();
+      window.removeEventListener('popstate', pop);
+    };
+  }, [frame, confirm]);
+  async function navigate(route: Route) {
+    if (routeHash(route) === routeHash(frame.route) || pending.current) return;
+    pending.current = true;
+    const allowed = await canLeave(confirm);
+    pending.current = false;
+    if (!allowed) return;
     scrollPositions.set(routeHash(frame.route), window.scrollY);
     const tab = tabNames.includes(route.view as Tab)
       ? (route.view as Tab)

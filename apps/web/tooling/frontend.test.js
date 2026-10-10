@@ -8,6 +8,31 @@ import {
 } from '../src/shared/lib/date.ts';
 import { decimalLabel } from '../src/shared/lib/decimal.ts';
 import { parseRoute, routeHash } from '../src/app/navigation.ts';
+import {
+  confirmAction,
+  confirmationSnapshot,
+  settleConfirmation,
+  subscribeConfirmation,
+} from '../src/shared/lib/confirmation.ts';
+
+test('confirmation resolves once and rejects overlapping requests', async () => {
+  let changes = 0;
+  const unsubscribe = subscribeConfirmation(() => {
+    changes++;
+  });
+  const first = confirmAction('Продолжить?');
+  assert.equal(confirmationSnapshot().message, 'Продолжить?');
+  assert.equal(await confirmAction('Другой запрос'), false);
+  settleConfirmation(false);
+  assert.equal(await first, false);
+  assert.equal(confirmationSnapshot(), null);
+  settleConfirmation(true);
+  const second = confirmAction('Сохранить?');
+  settleConfirmation(true);
+  assert.equal(await second, true);
+  assert.equal(changes, 4);
+  unsubscribe();
+});
 
 test('calendar arithmetic crosses leap days, years and Sunday correctly', () => {
   assert.equal(addDays('2024-02-28', 1), '2024-02-29');

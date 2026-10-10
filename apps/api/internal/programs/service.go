@@ -125,7 +125,7 @@ func insertRevision(ctx context.Context, tx pgx.Tx, user, pid, rid string, no in
 		}
 		for _, x := range d.Exercises {
 			var name string
-			if err = tx.QueryRow(ctx, `SELECT name FROM exercises WHERE user_id=$1 AND id=$2 AND archived_at IS NULL`, user, x.ExerciseID).Scan(&name); err != nil {
+			if err = tx.QueryRow(ctx, `SELECT name FROM exercises WHERE id=$1 AND archived_at IS NULL`, x.ExerciseID).Scan(&name); err != nil {
 				return err
 			}
 			if _, err = tx.Exec(ctx, `INSERT INTO program_day_exercises(id,user_id,revision_id,day_id,exercise_id,position,name_snapshot,note) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, x.ID, user, rid, dayID, x.ExerciseID, x.Position, name, x.Note); err != nil {

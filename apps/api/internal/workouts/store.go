@@ -16,7 +16,7 @@ func snapshots(ctx context.Context, db programs.DB, user string, input []program
 	for _, x := range input {
 		e := Exercise{ID: x.ID, ExerciseID: x.ExerciseID, Position: x.Position, Note: x.Note, Sets: []Set{}}
 		var guide []byte
-		err := db.QueryRow(ctx, `SELECT name,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=e.id AND g.reviewed_at<=now()) FROM exercises e WHERE e.user_id=$1 AND e.id=$2`, user, x.ExerciseID).Scan(&e.NameSnapshot, &guide)
+		err := db.QueryRow(ctx, `SELECT name,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=e.id AND g.reviewed_at<=now()) FROM exercises e WHERE e.id=$1`, x.ExerciseID).Scan(&e.NameSnapshot, &guide)
 		if err != nil {
 			return nil, err
 		}

@@ -30,7 +30,11 @@ export function AccessForm({
       const input = {
         login: value('login').trim(),
         password: value('password'),
-        deviceLabel: value('deviceLabel').trim(),
+        deviceLabel: /iPhone|iPad|iPod/.test(navigator.userAgent)
+          ? 'Устройство Apple'
+          : /Android/.test(navigator.userAgent)
+            ? 'Устройство Android'
+            : 'Компьютер',
       };
       const session =
         mode === 'register'
@@ -88,12 +92,14 @@ export function AccessForm({
               minLength={3}
               maxLength={32}
               pattern="[a-zA-Z][a-zA-Z0-9_]{2,31}"
-              aria-describedby="login-hint"
+              aria-describedby={mode === 'register' ? 'login-hint' : undefined}
             />
           </label>
-          <p className="field-hint" id="login-hint">
-            От 3 до 32 символов: латинские буквы, цифры и _. Начните с буквы.
-          </p>
+          {mode === 'register' && (
+            <p className="field-hint" id="login-hint">
+              От 3 до 32 символов: латинские буквы, цифры и _. Начните с буквы.
+            </p>
+          )}
           <label>
             Пароль
             <input
@@ -103,14 +109,18 @@ export function AccessForm({
                 mode === 'register' ? 'new-password' : 'current-password'
               }
               required
-              minLength={15}
+              minLength={mode === 'register' ? 8 : undefined}
               maxLength={128}
-              aria-describedby="password-hint"
+              aria-describedby={
+                mode === 'register' ? 'password-hint' : undefined
+              }
             />
           </label>
-          <p className="field-hint" id="password-hint">
-            От 15 символов. Можно использовать фразу с пробелами.
-          </p>
+          {mode === 'register' && (
+            <p className="field-hint" id="password-hint">
+              Не менее 8 символов.
+            </p>
+          )}
           {mode === 'register' && (
             <label>
               Подтверждение пароля
@@ -119,21 +129,11 @@ export function AccessForm({
                 type="password"
                 autoComplete="new-password"
                 required
-                minLength={15}
+                minLength={8}
                 maxLength={128}
               />
             </label>
           )}
-          <label>
-            Название устройства
-            <input
-              name="deviceLabel"
-              autoComplete="off"
-              required
-              maxLength={120}
-              placeholder="Например, мой телефон"
-            />
-          </label>
         </fieldset>
         {error && (
           <p role="alert" className="form-message">

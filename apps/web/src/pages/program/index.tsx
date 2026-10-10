@@ -1,3 +1,4 @@
+import { confirmAction } from '@/shared/lib/confirmation';
 import { useCallback } from 'react';
 import { archiveProgram, listPrograms } from '@/entities/program';
 import type { Session } from '@/entities/user';
@@ -75,11 +76,11 @@ export function ProgramPage({
               <button
                 className="text-button"
                 disabled={action.busy}
-                onClick={() => {
+                onClick={async () => {
                   if (
-                    !window.confirm(
+                    !(await confirmAction(
                       'Завершить программу с сегодняшнего дня? Сохранённая история останется.',
-                    )
+                    ))
                   )
                     return;
                   void action.run(async () => {

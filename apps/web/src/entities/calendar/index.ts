@@ -10,10 +10,18 @@ export const putNote = (
   date: string,
   body: string,
   version: number,
-) => write<DayNote>(`/days/${date}/note`, { body }, context, 'PUT', version);
+  id: string,
+) =>
+  write<DayNote>(
+    `/days/${date}/notes/${id}`,
+    { body },
+    context,
+    'PUT',
+    version,
+  );
 export const deleteNote = (context: WriteContext, note: DayNote) =>
   write<void>(
-    `/days/${note.localDate}/note`,
+    `/days/${note.localDate}/notes/${note.id}`,
     undefined,
     context,
     'DELETE',

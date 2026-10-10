@@ -130,7 +130,7 @@ func correct(ctx context.Context, tx pgx.Tx, user string, value Workout, cmd Com
 			e.TechniqueSnapshot = old.TechniqueSnapshot
 		} else {
 			var guide []byte
-			if err = tx.QueryRow(ctx, `SELECT name,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=x.id AND g.reviewed_at<=now()) FROM exercises x WHERE x.user_id=$1 AND x.id=$2`, user, e.ExerciseID).Scan(&e.NameSnapshot, &guide); err != nil {
+			if err = tx.QueryRow(ctx, `SELECT name,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=x.id AND g.reviewed_at<=now()) FROM exercises x WHERE x.id=$1`, e.ExerciseID).Scan(&e.NameSnapshot, &guide); err != nil {
 				return httpx.Result{}, err
 			}
 			e.TechniqueSnapshot = nil

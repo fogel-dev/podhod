@@ -2,10 +2,9 @@ openapi: 3.0.3
 info:
   title: Подход API
   version: 1.0.0
-  description:
-    Принятый контракт EGO-18. Приватная mobile-first PWA; реализация маршрутов выполняется
-    по этапам. JSON body <= 1 MiB, commands <= 50. Даты календаря локальные, timestamp UTC. План и
-    факты разделены.
+  description: Принятый контракт EGO-18. Приватная mobile-first PWA; реализация
+    маршрутов выполняется по этапам. JSON body <= 1 MiB, commands <= 50. Даты
+    календаря локальные, timestamp UTC. План и факты разделены.
   license:
     name: Private
 servers:
@@ -44,8 +43,8 @@ paths:
         - Auth
       summary: getSession
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -88,8 +87,8 @@ paths:
         - Auth
       summary: logout
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
       responses:
@@ -122,8 +121,8 @@ paths:
         - User
       summary: getMe
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -170,8 +169,8 @@ paths:
         - User
       summary: updateMe
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IfMatch'
@@ -233,8 +232,8 @@ paths:
         - User
       summary: listDevices
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -277,8 +276,8 @@ paths:
         - User
       summary: revokeDevice
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -322,8 +321,8 @@ paths:
         - User
       summary: createExport
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -369,8 +368,8 @@ paths:
         - User
       summary: getExport
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -419,8 +418,8 @@ paths:
         - User
       summary: requestAccountDeletion
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
       responses:
@@ -464,8 +463,8 @@ paths:
         - User
       summary: confirmAccountDeletion
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -517,8 +516,8 @@ paths:
         - Exercises
       summary: listExercises
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -573,8 +572,8 @@ paths:
         - Exercises
       summary: createExercise
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -631,8 +630,8 @@ paths:
         - Exercises
       summary: getExercise
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -685,8 +684,8 @@ paths:
         - Exercises
       summary: updateExercise
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -752,8 +751,8 @@ paths:
         - Programs
       summary: listPrograms
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -802,8 +801,8 @@ paths:
         - Programs
       summary: createProgram
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -860,8 +859,8 @@ paths:
         - Programs
       summary: getProgram
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -915,8 +914,8 @@ paths:
         - Programs
       summary: getProgramRevision
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -971,8 +970,8 @@ paths:
         - Programs
       summary: publishProgramRevision
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -1035,8 +1034,8 @@ paths:
         - Programs
       summary: copyProgramDay
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -1099,8 +1098,8 @@ paths:
         - Programs
       summary: archiveProgram
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -1163,8 +1162,8 @@ paths:
         - Programs
       summary: putScheduleException
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -1232,8 +1231,8 @@ paths:
         - Programs
       summary: deleteScheduleException
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -1283,8 +1282,8 @@ paths:
         - Workouts
       summary: listWorkouts
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -1355,8 +1354,8 @@ paths:
         - Workouts
       summary: startWorkout
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -1413,8 +1412,8 @@ paths:
         - Workouts
       summary: getActiveWorkout
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -1460,8 +1459,8 @@ paths:
         - Workouts
       summary: getWorkout
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -1515,8 +1514,8 @@ paths:
         - Workouts
       summary: commandWorkout
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -1572,8 +1571,8 @@ paths:
         - Workouts
       summary: listWorkoutRevisions
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -1624,8 +1623,8 @@ paths:
         - Workouts
       summary: getWorkoutRevision
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -1680,8 +1679,8 @@ paths:
         - Journal
       summary: getCalendar
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: month
           in: query
@@ -1730,8 +1729,8 @@ paths:
         - Journal
       summary: getDay
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: date
           in: path
@@ -1780,8 +1779,8 @@ paths:
         - Journal
       summary: putDayNote
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: date
           in: path
@@ -1846,8 +1845,8 @@ paths:
         - Journal
       summary: deleteDayNote
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: date
           in: path
@@ -1891,8 +1890,8 @@ paths:
         - Progress
       summary: listProgressExercises
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -1936,9 +1935,8 @@ paths:
       tags:
         - Progress
       summary: getExerciseProgress
-      description:
-        'Период <= 5 лет, <= 500 агрегированных точек; только current completed revisions.
-        Bucket: maxWeight=max, остальные=sum.'
+      description: 'Период <= 5 лет, <= 500 агрегированных точек; только current
+        completed revisions. Bucket: maxWeight=max, остальные=sum.'
       parameters:
         - name: from
           in: query
@@ -2019,8 +2017,8 @@ paths:
         - Photos
       summary: reservePhotoUpload
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -2072,8 +2070,8 @@ paths:
         - Photos
       summary: renewPhotoUpload
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -2131,8 +2129,8 @@ paths:
         - Photos
       summary: completePhotoUpload
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -2190,8 +2188,8 @@ paths:
         - Photos
       summary: listPhotos
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -2242,8 +2240,8 @@ paths:
         - Photos
       summary: getPhoto
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -2296,8 +2294,8 @@ paths:
         - Photos
       summary: updatePhoto
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -2362,8 +2360,8 @@ paths:
         - Photos
       summary: deletePhoto
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -2407,8 +2405,8 @@ paths:
         - Photos
       summary: getPhotoReadUrls
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
       responses:
@@ -2458,8 +2456,8 @@ paths:
         - Push
       summary: getReminders
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -2506,8 +2504,8 @@ paths:
         - Push
       summary: putReminders
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IfMatch'
@@ -2567,8 +2565,8 @@ paths:
         - Push
       summary: getPushConfig
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -2611,8 +2609,8 @@ paths:
         - Push
       summary: subscribePush
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -2669,8 +2667,8 @@ paths:
         - Push
       summary: unsubscribePush
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - name: id
           in: path
@@ -2714,8 +2712,8 @@ paths:
         - Push
       summary: testPush
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -2767,8 +2765,8 @@ paths:
         - Sync
       summary: createBootstrap
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -2814,8 +2812,8 @@ paths:
         - Sync
       summary: getBootstrapPage
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -2867,9 +2865,9 @@ paths:
       tags:
         - Sync
       summary: getChanges
-      description:
-        'Нужен initialCursor из bootstrap или предыдущий nextCursor. Отсутствие cursor: 422
-        bootstrap_required. Повтор страницы безопасен по entityVersion.'
+      description: 'Нужен initialCursor из bootstrap или предыдущий nextCursor.
+        Отсутствие cursor: 422 bootstrap_required. Повтор страницы безопасен по
+        entityVersion.'
       parameters:
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Limit'
@@ -2916,8 +2914,8 @@ paths:
         - Sync
       summary: syncCommands
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
       responses:
@@ -2967,8 +2965,8 @@ paths:
         - Health
       summary: health
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -2997,8 +2995,8 @@ paths:
         - Health
       summary: ready
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -3027,8 +3025,8 @@ paths:
         - Auth
       summary: Регистрация без отправки писем
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '201':
@@ -3042,7 +3040,9 @@ paths:
               schema:
                 type: string
                 maxLength: 1000
-              description: __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
+              description:
+                __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/;
+                Max-Age=2592000
         '400':
           $ref: '#/components/responses/Error400'
         '401':
@@ -3077,8 +3077,8 @@ paths:
         - Auth
       summary: Вход по логину и паролю
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters: []
       responses:
         '200':
@@ -3092,7 +3092,9 @@ paths:
               schema:
                 type: string
                 maxLength: 1000
-              description: __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
+              description:
+                __Host-podhod_session; HttpOnly; Secure; SameSite=Lax; Path=/;
+                Max-Age=2592000
         '400':
           $ref: '#/components/responses/Error400'
         '401':
@@ -3127,8 +3129,8 @@ paths:
         - Auth
       summary: Смена пароля с отзывом остальных сессий
       description:
-        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля
-        ответа клиент игнорирует.
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
       parameters:
         - $ref: '#/components/parameters/Csrf'
       responses:
@@ -3303,13 +3305,261 @@ paths:
           $ref: '#/components/responses/Error500'
         '503':
           $ref: '#/components/responses/Error503'
+  /api/v1/days/{date}/notes/{id}:
+    put:
+      operationId: putDayNoteById
+      tags:
+        - Journal
+      summary: Сохранить отдельную заметку
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DayNote'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteInput'
+    delete:
+      operationId: deleteDayNoteById
+      tags:
+        - Journal
+      summary: Удалить отдельную заметку
+      description:
+        Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса
+        отклоняются, поля ответа клиент игнорирует.
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/days/{date}/body-weight:
+    put:
+      operationId: putBodyWeight
+      tags:
+        - Journal
+      summary: Записать вес тела на текущий день
+      description: Одна приватная запись на день. Изменение разрешено только на
+        текущую дату в часовом поясе пользователя. If-Match 0 создаёт запись,
+        текущая версия обновляет её. Прошлые и будущие даты отклоняются.
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Csrf'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyWeight'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+            ETag:
+              schema:
+                type: string
+                pattern: ^"[0-9]+"$
+              description: Текущая версия
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '428':
+          $ref: '#/components/responses/Error428'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BodyWeightInput'
+  /api/v1/body-weight:
+    get:
+      operationId: getBodyWeightHistory
+      tags:
+        - Journal
+      summary: История веса тела
+      description:
+        Приватная история пользователя по возрастанию даты. Диапазон не
+        больше 366 дней включительно.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyWeightHistory'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+              description: Приватный ответ не кешируется
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '429':
+          $ref: '#/components/responses/Error429'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
 components:
   securitySchemes:
     session:
       type: apiKey
       in: cookie
       name: __Host-podhod_session
-      description: HttpOnly Secure SameSite=Lax Path=/; мутации проверяют Origin и X-CSRF-Token.
+      description:
+        HttpOnly Secure SameSite=Lax Path=/; мутации проверяют Origin и
+        X-CSRF-Token.
   schemas:
     User:
       type: object
@@ -3551,6 +3801,9 @@ components:
       type: object
       additionalProperties: false
       properties:
+        canEdit:
+          type: boolean
+          description: Только автор может изменять и архивировать упражнение.
         id:
           type: string
           format: uuid
@@ -3581,6 +3834,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/TechniqueGuide'
       required:
+        - canEdit
         - id
         - version
         - createdAt
@@ -5252,12 +5506,25 @@ components:
             - $ref: '#/components/schemas/DayNote'
         photos:
           $ref: '#/components/schemas/PhotoPage'
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayNote'
+          minItems: 0
+          maxItems: 100
+        bodyWeight:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/BodyWeight'
       required:
         - date
         - plans
         - workouts
         - note
         - photos
+        - notes
+        - bodyWeight
     ProgressPoint:
       type: object
       additionalProperties: false
@@ -5492,7 +5759,9 @@ components:
         checksumSha256:
           type: string
           pattern: ^[a-f0-9]{64}$
-          description: SHA-256 hex lowercase; upload adapter формирует checksum header провайдера.
+          description:
+            SHA-256 hex lowercase; upload adapter формирует checksum header
+            провайдера.
       required:
         - id
         - localDate
@@ -5538,7 +5807,9 @@ components:
         checksumSha256:
           type: string
           pattern: ^[a-f0-9]{64}$
-          description: SHA-256 hex lowercase; upload adapter формирует checksum header провайдера.
+          description:
+            SHA-256 hex lowercase; upload adapter формирует checksum header
+            провайдера.
       required:
         - expectedVersion
         - checksumSha256
@@ -6179,7 +6450,7 @@ components:
         login: *a1
         password: &a2
           type: string
-          minLength: 15
+          minLength: 8
           maxLength: 128
           writeOnly: true
         passwordConfirmation: *a2
@@ -6218,6 +6489,54 @@ components:
         - currentPassword
         - password
         - passwordConfirmation
+    BodyWeight:
+      type: object
+      additionalProperties: false
+      properties:
+        localDate:
+          type: string
+          format: date
+        weightKg:
+          type: string
+          pattern: ^[0-9]{1,3}\.[0-9]{2}$
+        version:
+          type: integer
+          format: int64
+          minimum: 1
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - localDate
+        - weightKg
+        - version
+        - createdAt
+        - updatedAt
+    BodyWeightInput:
+      type: object
+      additionalProperties: false
+      properties:
+        weightKg:
+          type: string
+          pattern: ^[0-9]{1,3}(\.[0-9]{1,2})?$
+          description: Вес в кг, больше 0 и не больше 500
+      required:
+        - weightKg
+    BodyWeightHistory:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BodyWeight'
+          maxItems: 366
+          minItems: 0
+      required:
+        - items
   parameters:
     IdempotencyKey:
       name: Idempotency-Key

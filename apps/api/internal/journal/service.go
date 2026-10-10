@@ -30,11 +30,13 @@ type Plan struct {
 	Status            string `json:"status"`
 }
 type Day struct {
-	Date     string             `json:"date"`
-	Plans    []Plan             `json:"plans"`
-	Workouts []workouts.Workout `json:"workouts"`
-	Note     *Note              `json:"note"`
-	Photos   media.Page         `json:"photos"`
+	BodyWeight *BodyWeight        `json:"bodyWeight"`
+	Date       string             `json:"date"`
+	Plans      []Plan             `json:"plans"`
+	Workouts   []workouts.Workout `json:"workouts"`
+	Note       *Note              `json:"note"`
+	Notes      []Note             `json:"notes"`
+	Photos     media.Page         `json:"photos"`
 }
 type CalendarDay struct {
 	Date              string             `json:"date"`
@@ -50,6 +52,10 @@ type Service struct {
 }
 
 func (s *Service) RegisterRoutes(m *http.ServeMux) {
+	m.HandleFunc("PUT /api/v1/days/{date}/body-weight", s.Auth.Require(s.putBodyWeight))
+	m.HandleFunc("GET /api/v1/body-weight", s.Auth.Require(s.bodyWeightHistory))
+	m.HandleFunc("PUT /api/v1/days/{date}/notes/{id}", s.Auth.Require(s.putNote))
+	m.HandleFunc("DELETE /api/v1/days/{date}/notes/{id}", s.Auth.Require(s.deleteNote))
 	for pattern, fn := range map[string]func(http.ResponseWriter, *http.Request, auth.Actor){"GET /api/v1/calendar": s.calendar, "GET /api/v1/days/{date}": s.day, "PUT /api/v1/days/{date}/note": s.putNote, "DELETE /api/v1/days/{date}/note": s.deleteNote} {
 		m.HandleFunc(pattern, s.Auth.Require(fn))
 	}
@@ -63,7 +69,7 @@ func scanNote(row pgx.Row) (Note, error) {
 	return n, err
 }
 func loadDay(ctx context.Context, db programs.DB, user, date string) (Day, error) {
-	day := Day{Date: date, Plans: []Plan{}, Workouts: []workouts.Workout{}}
+	day := Day{Date: date, Plans: []Plan{}, Workouts: []workouts.Workout{}, Notes: []Note{}}
 	occurrences, err := programs.At(ctx, db, user, date)
 	if err != nil {
 		return day, err
@@ -147,13 +153,36 @@ func loadDay(ctx context.Context, db programs.DB, user, date string) (Day, error
 		}
 		day.Workouts = append(day.Workouts, w)
 	}
-	n, err := scanNote(db.QueryRow(ctx, `SELECT `+noteColumns+` FROM day_notes WHERE user_id=$1 AND local_date=$2::date AND deleted_at IS NULL`, user, date))
-	if err == nil {
-		day.Note = &n
-	} else if !errors.Is(err, pgx.ErrNoRows) {
+	rows, err = db.Query(ctx, `SELECT `+noteColumns+` FROM day_notes WHERE user_id=$1 AND local_date=$2::date AND deleted_at IS NULL ORDER BY created_at,id LIMIT 100`, user, date)
+	if err != nil {
 		return day, err
 	}
+	for rows.Next() {
+		n, scanErr := scanNote(rows)
+		if scanErr != nil {
+			rows.Close()
+			return day, scanErr
+		}
+		day.Notes = append(day.Notes, n)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return day, err
+	}
+	if len(day.Notes) > 0 {
+		day.Note = &day.Notes[0]
+	}
 	day.Photos, err = media.Day(ctx, db, user, date)
+	if err != nil {
+		return day, err
+	}
+	weight, err := scanWeight(db.QueryRow(ctx, `SELECT `+weightColumns+` FROM body_weights WHERE user_id=$1 AND local_date=$2::date`, user, date))
+	if errors.Is(err, pgx.ErrNoRows) {
+		err = nil
+	} else if err == nil {
+		day.BodyWeight = &weight
+	}
 	return day, err
 }
 func (s *Service) day(w http.ResponseWriter, r *http.Request, a auth.Actor) {
@@ -208,6 +237,11 @@ func (s *Service) calendar(w http.ResponseWriter, r *http.Request, a auth.Actor)
 }
 func (s *Service) putNote(w http.ResponseWriter, r *http.Request, a auth.Actor) {
 	date := r.PathValue("date")
+	noteID := r.PathValue("id")
+	if noteID != "" && !httpx.UUID(noteID) {
+		httpx.Error(w, httpx.Fail(404, "not_found"))
+		return
+	}
 	if _, err := httpx.Date(date); err != nil {
 		httpx.Error(w, err)
 		return
@@ -228,17 +262,43 @@ func (s *Service) putNote(w http.ResponseWriter, r *http.Request, a auth.Actor) 
 		return
 	}
 	s.Core.Rest(w, r, a, in, func(tx pgx.Tx) (httpx.Result, error) {
-		n, err := scanNote(tx.QueryRow(r.Context(), `SELECT `+noteColumns+` FROM day_notes WHERE user_id=$1 AND local_date=$2::date`, a.User.ID, date))
+		if _, err := tx.Exec(r.Context(), `SELECT pg_advisory_xact_lock(hashtextextended($1,0))`, a.User.ID+":"+date); err != nil {
+			return httpx.Result{}, err
+		}
+		n, err := scanNote(tx.QueryRow(r.Context(), `SELECT `+noteColumns+` FROM day_notes WHERE user_id=$1 AND local_date=$2::date AND ($3='' OR id::text=$3) ORDER BY created_at,id LIMIT 1 FOR UPDATE`, a.User.ID, date, noteID))
 		status := 200
 		if errors.Is(err, pgx.ErrNoRows) {
 			if version != 0 {
 				return httpx.Result{}, httpx.Fail(409, "version_conflict")
 			}
-			n, err = scanNote(tx.QueryRow(r.Context(), `INSERT INTO day_notes(id,user_id,local_date,body) VALUES($1,$2,$3,$4) RETURNING `+noteColumns, id.New(), a.User.ID, date, *in.Body))
+			var count int
+			if err = tx.QueryRow(r.Context(), `SELECT count(*) FROM day_notes WHERE user_id=$1 AND local_date=$2::date AND deleted_at IS NULL`, a.User.ID, date).Scan(&count); err != nil {
+				return httpx.Result{}, err
+			}
+			if count >= 100 {
+				return httpx.Result{}, httpx.Fail(422, "note_limit")
+			}
+			newID := noteID
+			if newID == "" {
+				newID = id.New()
+			}
+			n, err = scanNote(tx.QueryRow(r.Context(), `INSERT INTO day_notes(id,user_id,local_date,body) VALUES($1,$2,$3,$4) RETURNING `+noteColumns, newID, a.User.ID, date, *in.Body))
 		} else if err == nil {
 			var deleted bool
 			if err = tx.QueryRow(r.Context(), `SELECT deleted_at IS NOT NULL FROM day_notes WHERE user_id=$1 AND id=$2`, a.User.ID, n.ID).Scan(&deleted); err != nil {
 				return httpx.Result{}, err
+			}
+			if deleted && noteID != "" {
+				return httpx.Result{}, httpx.Fail(404, "not_found")
+			}
+			if deleted {
+				var count int
+				if err = tx.QueryRow(r.Context(), `SELECT count(*) FROM day_notes WHERE user_id=$1 AND local_date=$2::date AND deleted_at IS NULL`, a.User.ID, date).Scan(&count); err != nil {
+					return httpx.Result{}, err
+				}
+				if count >= 100 {
+					return httpx.Result{}, httpx.Fail(422, "note_limit")
+				}
 			}
 			if n.Version != version && !(version == 0 && deleted) {
 				return httpx.Result{}, httpx.Fail(409, "version_conflict")
@@ -253,6 +313,11 @@ func (s *Service) putNote(w http.ResponseWriter, r *http.Request, a auth.Actor) 
 }
 func (s *Service) deleteNote(w http.ResponseWriter, r *http.Request, a auth.Actor) {
 	date := r.PathValue("date")
+	noteID := r.PathValue("id")
+	if noteID != "" && !httpx.UUID(noteID) {
+		httpx.Error(w, httpx.Fail(404, "not_found"))
+		return
+	}
 	if _, err := httpx.Date(date); err != nil {
 		httpx.Error(w, err)
 		return
@@ -263,7 +328,7 @@ func (s *Service) deleteNote(w http.ResponseWriter, r *http.Request, a auth.Acto
 		return
 	}
 	s.Core.Rest(w, r, a, struct{}{}, func(tx pgx.Tx) (httpx.Result, error) {
-		n, err := scanNote(tx.QueryRow(r.Context(), `SELECT `+noteColumns+` FROM day_notes WHERE user_id=$1 AND local_date=$2::date AND deleted_at IS NULL`, a.User.ID, date))
+		n, err := scanNote(tx.QueryRow(r.Context(), `SELECT `+noteColumns+` FROM day_notes WHERE user_id=$1 AND local_date=$2::date AND deleted_at IS NULL AND ($3='' OR id::text=$3) ORDER BY created_at,id LIMIT 1 FOR UPDATE`, a.User.ID, date, noteID))
 		if err != nil {
 			return httpx.Result{}, err
 		}

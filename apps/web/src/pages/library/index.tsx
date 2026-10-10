@@ -4,7 +4,7 @@ import { PageTitle } from '@/shared/ui/kit';
 export function LibraryPage({ session }: { session: Session }) {
   return (
     <>
-      <PageTitle title="Упражнения" subtitle="Ваша личная библиотека" />
+      <PageTitle title="Упражнения" subtitle="Общая библиотека" />
       <ExerciseLibrary context={session} />
     </>
   );

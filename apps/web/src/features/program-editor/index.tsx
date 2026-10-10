@@ -1,3 +1,4 @@
+import { confirmAction } from '@/shared/lib/confirmation';
 import { useState } from 'react';
 import { createProgram, publishProgram } from '@/entities/program';
 import type { Program, ProgramRevisionInput } from '@/entities/program';
@@ -13,6 +14,8 @@ import {
   weekdays,
 } from '@/shared/lib/date';
 import { ExerciseLibrary } from './library';
+import { Select } from '@/shared/ui/select';
+import { DatePicker } from '@/shared/ui/date-picker';
 export { ExerciseLibrary } from './library';
 type DraftDay = { weekday: number; exercises: PlanExerciseInput[] };
 const freshTarget = (position: number) => ({
@@ -49,10 +52,10 @@ export function ProgramEditor({
   const [name, setName] = useState(program?.name ?? '');
   const [start, setStart] = useState(initial?.startDate ?? today(timezone));
   const [end, setEnd] = useState(
-    initial?.endDate ?? addDays(today(timezone), 41),
+    initial?.endDate ?? addDays(today(timezone), 27),
   );
   const [effective, setEffective] = useState(today(timezone));
-  const [zone, setZone] = useState(initial?.timezone ?? timezone);
+  const zone = initial?.timezone ?? timezone;
   const [days, setDays] = useState<DraftDay[]>(
     initial?.days.map((day) => ({
       weekday: day.weekday,
@@ -185,62 +188,46 @@ export function ProgramEditor({
                   />
                 </label>
                 <div className="dates">
-                  <label className="field">
-                    Начало
-                    <input
-                      type="date"
-                      required
-                      value={start}
-                      onChange={(e) => setStart(e.target.value)}
-                    />
-                  </label>
-                  <label className="field">
-                    Окончание
-                    <input
-                      type="date"
-                      required
-                      min={start}
-                      value={end}
-                      onChange={(e) => setEnd(e.target.value)}
-                    />
-                  </label>
+                  <DatePicker
+                    label="Начало"
+                    value={start}
+                    onChange={(date) => {
+                      setStart(date);
+                      if (date > end) setEnd(date);
+                    }}
+                  />
+                  <DatePicker
+                    label="Окончание"
+                    value={end}
+                    min={start}
+                    onChange={setEnd}
+                  />
                 </div>
                 <div className="segment">
-                  {[6, 12].map((weeks) => (
+                  {[4, 8].map((weeks) => (
                     <button
                       type="button"
                       key={weeks}
                       aria-pressed={end === addDays(start, weeks * 7 - 1)}
                       onClick={() => setEnd(addDays(start, weeks * 7 - 1))}
                     >
-                      {weeks} недель
+                      {weeks} {weeks === 4 ? 'недели' : 'недель'}
                     </button>
                   ))}
                 </div>
-                <label className="field">
-                  Часовой пояс
-                  <input
-                    required
-                    maxLength={100}
-                    value={zone}
-                    onChange={(e) => setZone(e.target.value)}
-                  />
-                </label>
                 {program && (
-                  <label className="field">
-                    Применить изменения с
-                    <input
-                      type="date"
-                      required
+                  <div className="field">
+                    <DatePicker
+                      label="Применить изменения с"
                       min={today(timezone)}
                       max={end}
                       value={effective}
-                      onChange={(e) => setEffective(e.target.value)}
+                      onChange={setEffective}
                     />
                     <span className="field-hint">
                       Завершённые тренировки останутся прежними.
                     </span>
-                  </label>
+                  </div>
                 )}
               </>
             )}
@@ -259,15 +246,15 @@ export function ProgramEditor({
                       aria-pressed={days.some(
                         (day) => day.weekday === index + 1,
                       )}
-                      onClick={() => {
+                      onClick={async () => {
                         const weekday = index + 1;
                         if (days.some((d) => d.weekday === weekday)) {
                           if (
                             days.find((d) => d.weekday === weekday)?.exercises
                               .length &&
-                            !window.confirm(
+                            !(await confirmAction(
                               'Убрать день и его упражнения из черновика?',
-                            )
+                            ))
                           )
                             return;
                           setDays(days.filter((d) => d.weekday !== weekday));
@@ -288,22 +275,20 @@ export function ProgramEditor({
             )}
             {step === 2 && (
               <>
-                <label className="field">
-                  День программы
-                  <select
-                    value={activeDay?.weekday ?? days[0]?.weekday}
-                    onChange={(e) => setSelected(Number(e.target.value))}
-                  >
-                    {[...days]
+                <div className="field">
+                  <span>День программы</span>
+                  <Select
+                    label="День программы"
+                    value={String(activeDay?.weekday ?? days[0]?.weekday)}
+                    onChange={(value) => setSelected(Number(value))}
+                    options={[...days]
                       .sort((a, b) => a.weekday - b.weekday)
-                      .map((day) => (
-                        <option key={day.weekday} value={day.weekday}>
-                          {weekdayNames[day.weekday - 1]} ·{' '}
-                          {day.exercises.length} упр.
-                        </option>
-                      ))}
-                  </select>
-                </label>
+                      .map((day) => ({
+                        value: String(day.weekday),
+                        label: `${weekdayNames[day.weekday - 1]} · ${day.exercises.length} упр.`,
+                      }))}
+                  />
+                </div>
                 {!activeDay && (
                   <button
                     type="button"
@@ -564,16 +549,16 @@ export function ProgramEditor({
                       type="button"
                       className="secondary-button wide"
                       disabled={!targets.length}
-                      onClick={() => {
+                      onClick={async () => {
                         if (
                           days.some(
                             (day) =>
                               targets.includes(day.weekday) &&
                               day.exercises.length,
                           ) &&
-                          !window.confirm(
+                          !(await confirmAction(
                             'Заменить существующие упражнения выбранных дней?',
-                          )
+                          ))
                         )
                           return;
                         setDays(

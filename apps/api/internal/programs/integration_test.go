@@ -27,6 +27,7 @@ func TestProgramRevisionsCopyMovesAndOwnership(t *testing.T) {
 	end := start.AddDate(0, 0, 28).Format("2006-01-02")
 	weight := "42.50"
 	in := Input{date, end, date, "UTC", []InputDay{{1, []InputExercise{{id.New(), eid, 1, "", []Target{{id.New(), 1, &weight, 8, 10}}}}}}}
+	domaintest.Status(t, app.Write(b, "POST", "/api/v1/programs", map[string]any{"id": id.New(), "name": "Общее упражнение", "revision": in}, 0), 201)
 	pid := id.New()
 	body := map[string]any{"id": pid, "name": "Сила", "revision": in}
 	key := id.New()

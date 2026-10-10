@@ -51,7 +51,7 @@ func (s *Service) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !validPassword(input.Password) {
-		problem(w, 422, "invalid_password", "Пароль должен содержать от 15 до 128 символов")
+		problem(w, 422, "invalid_password", "Пароль должен содержать от 8 до 128 символов")
 		return
 	}
 	if input.Password != input.PasswordConfirmation {
@@ -234,7 +234,7 @@ func (s *Service) changePassword(w http.ResponseWriter, r *http.Request, a Actor
 		return
 	}
 	if !validPassword(input.CurrentPassword) || !validPassword(input.Password) {
-		problem(w, 422, "invalid_password", "Пароль должен содержать от 15 до 128 символов")
+		problem(w, 422, "invalid_password", "Пароль должен содержать от 8 до 128 символов")
 		return
 	}
 	if input.Password != input.PasswordConfirmation {

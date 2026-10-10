@@ -31,7 +31,18 @@ func TestLibraryOwnershipReceiptsVersionsAndPaging(t *testing.T) {
 	}
 	body["name"] = "Другой"
 	domaintest.Status(t, app.Request(a, "POST", "/api/v1/exercises", body, key, ""), 409)
-	domaintest.Status(t, app.Request(b, "GET", "/api/v1/exercises/"+eid, nil, "", ""), 404)
+	shared := app.Request(b, "GET", "/api/v1/exercises/"+eid, nil, "", "")
+	domaintest.Status(t, shared, 200)
+	var other Exercise
+	domaintest.Decode(t, shared, &other)
+	if other.Note != "" || other.CanEdit || !e.CanEdit {
+		t.Fatal("shared exercise leaked private note or edit permissions")
+	}
+	var sharedPage struct{ Items []Exercise }
+	domaintest.Decode(t, app.Request(b, "GET", "/api/v1/exercises?q=жим", nil, "", ""), &sharedPage)
+	if len(sharedPage.Items) != 1 || sharedPage.Items[0].Note != "" || sharedPage.Items[0].CanEdit {
+		t.Fatal("shared library not visible or private note leaked")
+	}
 	domaintest.Status(t, app.Write(b, "PATCH", "/api/v1/exercises/"+eid, map[string]any{"archived": true}, 1), 404)
 	var wg sync.WaitGroup
 	statuses := make(chan int, 2)

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PasswordForm } from '@/features/password-auth';
-import { DevicesSettings, TimezoneSettings } from '@/features/account-settings';
+import { DevicesSettings } from '@/features/account-settings';
 import { AppAvailability } from '@/features/app-availability';
 import { logout } from '@/entities/user';
 import type { Session } from '@/entities/user';
@@ -22,10 +22,12 @@ export function AccountPage({
     [error, setError] = useState('');
   return (
     <div className={embedded ? 'account-embedded' : 'account-page'}>
-      <header className="page-header">
-        {!embedded && <Brand />}
-        <ThemeControl />
-      </header>
+      {!embedded && (
+        <header className="page-header">
+          <Brand />
+          <ThemeControl />
+        </header>
+      )}
       <h1 tabIndex={-1}>Настройки</h1>
       <section className="settings-section">
         <h2>{session.user.login}</h2>
@@ -34,7 +36,6 @@ export function AccountPage({
           Почта не подтверждена. Вход — по логину и паролю.
         </p>
       </section>
-      <TimezoneSettings session={session} onChanged={onChanged} />
       <AppAvailability />
       <PasswordForm session={session} onChanged={onChanged} />
       <DevicesSettings session={session} onChanged={onChanged} />

@@ -1,3 +1,4 @@
+import { confirmAction } from '@/shared/lib/confirmation';
 import { useCallback, useState } from 'react';
 import {
   createExercise,
@@ -72,7 +73,8 @@ export function ExerciseLibrary({
             />
           </label>
           <p className="field-hint">
-            Советы по технике публикуются только с проверенным источником.
+            Название доступно всем пользователям. Личная заметка видна только
+            вам.
           </p>
           <p role="alert">{action.error}</p>
           <div className="actions">
@@ -93,7 +95,7 @@ export function ExerciseLibrary({
   return (
     <section className="library">
       <label className="field">
-        Поиск в вашей библиотеке
+        Поиск в общей библиотеке
         <input
           type="search"
           value={query}
@@ -151,47 +153,50 @@ export function ExerciseLibrary({
             {exercise.note && (
               <p className="small muted preserve-lines">{exercise.note}</p>
             )}
-            <div className="actions">
-              <button
-                className="text-button"
-                onClick={() => {
-                  setEditing(exercise);
-                  setName(exercise.name);
-                  setNote(exercise.note);
-                  setForm(true);
-                  action.clear();
-                }}
-              >
-                Изменить
-              </button>
-              <button
-                className="text-button"
-                disabled={action.busy}
-                onClick={() => {
-                  if (
-                    !exercise.archivedAt &&
-                    !window.confirm(
-                      'Убрать упражнение в архив? История и планы сохранятся.',
+            {exercise.canEdit && (
+              <div className="actions">
+                <button
+                  className="text-button"
+                  onClick={() => {
+                    setEditing(exercise);
+                    setName(exercise.name);
+                    setNote(exercise.note);
+                    setForm(true);
+                    action.clear();
+                  }}
+                >
+                  Изменить
+                </button>
+                <button
+                  className="text-button"
+                  disabled={action.busy}
+                  onClick={async () => {
+                    if (
+                      !exercise.archivedAt &&
+                      !(await confirmAction(
+                        'Убрать упражнение в архив? История и планы сохранятся.',
+                      ))
                     )
-                  )
-                    return;
-                  void action.run(async () => {
-                    await updateExercise(context, exercise, {
-                      archived: !exercise.archivedAt,
+                      return;
+                    void action.run(async () => {
+                      await updateExercise(context, exercise, {
+                        archived: !exercise.archivedAt,
+                      });
+                      resource.reload();
                     });
-                    resource.reload();
-                  });
-                }}
-              >
-                {exercise.archivedAt ? 'Восстановить' : 'В архив'}
-              </button>
-            </div>
+                  }}
+                >
+                  {exercise.archivedAt ? 'Восстановить' : 'В архив'}
+                </button>
+              </div>
+            )}
           </article>
         ))
       ) : (
         <Empty title={query ? 'Ничего не найдено' : 'Библиотека пока пуста'}>
           <p className="muted">
-            Создайте упражнение, чтобы выбирать его в следующих программах.
+            Добавьте упражнение в общую библиотеку, чтобы выбирать его в
+            программах.
           </p>
         </Empty>
       )}

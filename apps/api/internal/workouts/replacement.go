@@ -31,7 +31,7 @@ func normalizeReplacement(ctx context.Context, db programs.DB, user string, valu
 			e.TechniqueSnapshot = previous.TechniqueSnapshot
 		} else {
 			var guide []byte
-			if err = db.QueryRow(ctx, `SELECT name,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=x.id AND g.reviewed_at<=now()) FROM exercises x WHERE x.user_id=$1 AND x.id=$2 AND x.archived_at IS NULL`, user, e.ExerciseID).Scan(&e.NameSnapshot, &guide); err != nil {
+			if err = db.QueryRow(ctx, `SELECT name,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=x.id AND g.reviewed_at<=now()) FROM exercises x WHERE x.id=$1 AND x.archived_at IS NULL`, e.ExerciseID).Scan(&e.NameSnapshot, &guide); err != nil {
 				return err
 			}
 			e.TechniqueSnapshot = nil

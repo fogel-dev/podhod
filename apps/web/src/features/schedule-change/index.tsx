@@ -1,3 +1,4 @@
+import { confirmAction } from '@/shared/lib/confirmation';
 import { useState } from 'react';
 import { getProgram } from '@/entities/program';
 import type { PlanOccurrence } from '@/entities/calendar';
@@ -52,8 +53,10 @@ export function ScheduleChange({
           <button
             className="text-button"
             disabled={action.busy}
-            onClick={() => {
-              if (window.confirm('Восстановить тренировку на исходной дате?'))
+            onClick={async () => {
+              if (
+                await confirmAction('Восстановить тренировку на исходной дате?')
+              )
                 void action.run(() => change('restore'));
             }}
           >
@@ -71,9 +74,9 @@ export function ScheduleChange({
             <button
               className="text-button"
               disabled={action.busy}
-              onClick={() => {
+              onClick={async () => {
                 if (
-                  window.confirm(
+                  await confirmAction(
                     'Отменить тренировку в этот день? История сохраняется.',
                   )
                 )

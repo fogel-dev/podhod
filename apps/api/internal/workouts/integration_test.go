@@ -37,6 +37,25 @@ func send(t *testing.T, app *domaintest.App, a domaintest.Client, w Workout, kin
 	domaintest.Decode(t, response, &result)
 	return result.Aggregate
 }
+func TestSharedExerciseWorkoutKeepsHistoryPrivate(t *testing.T) {
+	app, author, in := setup(t)
+	other := app.User(t, "second")
+	response := app.Write(other, "POST", "/api/v1/workouts", in, 0)
+	domaintest.Status(t, response, 201)
+	var workout Workout
+	domaintest.Decode(t, response, &workout)
+	if workout.CurrentRevision.Exercises[0].NameSnapshot != "Жим" {
+		t.Fatal("shared exercise snapshot missing")
+	}
+	domaintest.Status(t, app.Request(author, "GET", "/api/v1/workouts/"+workout.ID, nil, "", ""), 404)
+	domaintest.Status(t, app.Write(author, "PATCH", "/api/v1/exercises/"+in.Exercises[0].ExerciseID, map[string]any{"name": "Новое название"}, 1), 200)
+	response = app.Request(other, "GET", "/api/v1/workouts/"+workout.ID, nil, "", "")
+	domaintest.Status(t, response, 200)
+	domaintest.Decode(t, response, &workout)
+	if workout.CurrentRevision.Exercises[0].NameSnapshot != "Жим" {
+		t.Fatal("library edit rewrote workout snapshot")
+	}
+}
 func TestWorkoutFactsRestUndoFinishAndSealing(t *testing.T) {
 	app, a, in := setup(t)
 	b := app.User(t, "second")

@@ -7,6 +7,7 @@ import { useResource } from '@/shared/lib/resource';
 import { addDays, today } from '@/shared/lib/date';
 import type { Navigate } from '@/shared/lib/navigation';
 import { ResourceState } from '@/shared/ui/kit';
+import { Select } from '@/shared/ui/select';
 export function ProgressView({
   exercises,
   timezone,
@@ -41,30 +42,25 @@ export function ProgressView({
   );
   return (
     <>
-      <label className="field">
-        Упражнение
-        <select
+      <div className="field">
+        <span>Упражнение</span>
+        <Select
+          label="Упражнение"
           value={exercise}
-          onChange={(event) => {
-            setExercise(event.target.value);
+          onChange={(value) => {
+            setExercise(value);
             try {
-              localStorage.setItem(
-                'podhod.progress.exercise',
-                event.target.value,
-              );
+              localStorage.setItem('podhod.progress.exercise', value);
             } catch {
               /* optional preference */
             }
           }}
-        >
-          {exercises.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-              {item.archivedAt ? ' · в архиве' : ''}
-            </option>
-          ))}
-        </select>
-      </label>
+          options={exercises.map((item) => ({
+            value: item.id,
+            label: `${item.name}${item.archivedAt ? ' · в архиве' : ''}`,
+          }))}
+        />
+      </div>
       <div className="segment" aria-label="Период">
         {[6, 12].map((weeks) => (
           <button
@@ -81,19 +77,18 @@ export function ProgressView({
           </button>
         ))}
       </div>
-      <label className="field">
-        Показатель
-        <select
+      <div className="field">
+        <span>Показатель</span>
+        <Select
+          label="Показатель"
           value={metric}
-          onChange={(e) => setMetric(e.target.value as Progress['metric'])}
-        >
-          {Object.entries(metricLabels).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={(value) => setMetric(value as Progress['metric'])}
+          options={Object.entries(metricLabels).map(([value, label]) => ({
+            value,
+            label,
+          }))}
+        />
+      </div>
       <details className="progress-options">
         <summary>Даты и группировка</summary>
         <div className="dates">
@@ -122,17 +117,19 @@ export function ProgressView({
             />
           </label>
         </div>
-        <label className="field">
-          Группировка
-          <select
+        <div className="field">
+          <span>Группировка</span>
+          <Select
+            label="Группировка"
             value={bucket}
-            onChange={(e) => setBucket(e.target.value as Progress['bucket'])}
-          >
-            <option value="session">По тренировкам</option>
-            <option value="week">По неделям</option>
-            <option value="month">По месяцам</option>
-          </select>
-        </label>
+            onChange={(value) => setBucket(value as Progress['bucket'])}
+            options={[
+              { value: 'session', label: 'По тренировкам' },
+              { value: 'week', label: 'По неделям' },
+              { value: 'month', label: 'По месяцам' },
+            ]}
+          />
+        </div>
       </details>
       {!resource.data ? (
         <ResourceState error={resource.error} retry={resource.reload} />

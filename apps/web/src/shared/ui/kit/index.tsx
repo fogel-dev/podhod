@@ -11,9 +11,17 @@ export function Icon({
     | 'back'
     | 'next'
     | 'check'
-    | 'plus';
+    | 'plus'
+    | 'sun'
+    | 'moon'
+    | 'close'
+    | 'chevron-down';
 }) {
   const paths = {
+    'chevron-down': 'M6 9l6 6 6-6',
+    close: 'M6 6l12 12 M18 6L6 18',
+    sun: 'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8 M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l1.5 1.5 M17.5 17.5L19 19 M5 19l1.5-1.5 M17.5 6.5L19 5',
+    moon: 'M20 14a8 8 0 0 1-10-10A8 8 0 1 0 20 14z',
     today: 'M5 4h14v16H5z M9 2v4 M15 2v4 M8 10h8 M8 14h5',
     calendar:
       'M3 5h18v16H3z M3 9h18 M7 3v4 M17 3v4 M7 13h2 M12 13h2 M17 13h1 M7 17h2 M12 17h2',

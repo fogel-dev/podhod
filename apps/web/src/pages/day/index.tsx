@@ -3,6 +3,7 @@ import { getDay, planStatus } from '@/entities/calendar';
 import { PlanCard } from '@/features/start-workout';
 import { DayNoteEditor } from '@/features/day-note';
 import { PhotoGallery } from '@/features/photo-gallery';
+import { BodyWeightRecorder } from '@/features/body-weight';
 import { ScheduleChange } from '@/features/schedule-change';
 import type { Session } from '@/entities/user';
 import type { Navigate } from '@/shared/lib/navigation';
@@ -77,17 +78,32 @@ export function DayPage({
               </button>
             </section>
           ))}
+          <BodyWeightRecorder
+            key={`${date}:${resource.data.bodyWeight?.version ?? 0}`}
+            date={date}
+            timezone={session.user.timezone}
+            context={session}
+            initial={resource.data.bodyWeight}
+            onChanged={() => {
+              resource.reload();
+              onChanged();
+            }}
+          />
           <DayNoteEditor
             context={session}
             date={date}
-            initial={resource.data.note}
-            onChanged={onChanged}
+            initial={resource.data.notes}
+            onChanged={() => {
+              resource.reload();
+              onChanged();
+            }}
           />
           <PhotoGallery context={session} date={date} onChanged={onChanged} />
           {!resource.data.plans.length &&
             !resource.data.workouts.length &&
-            !resource.data.note &&
-            !resource.data.photos.items.length && (
+            !resource.data.notes.length &&
+            !resource.data.photos.items.length &&
+            !resource.data.bodyWeight && (
               <Empty title="Записей пока нет">
                 <p className="muted">
                   Здесь будут планы и результаты этого дня.

@@ -28,7 +28,7 @@ export function CalendarPage({
         onDay={(value) => navigate({ view: 'day', date: value })}
       />
       <button
-        className="text-button wide"
+        className="text-button wide calendar-return"
         onClick={() => onMonth(date.slice(0, 7))}
       >
         К текущему месяцу

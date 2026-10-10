@@ -27,18 +27,24 @@ type Exercise struct {
 	Note           string     `json:"note"`
 	ArchivedAt     *time.Time `json:"archivedAt"`
 	TechniqueGuide *Guide     `json:"techniqueGuide"`
+	CanEdit        bool       `json:"canEdit"`
 }
 type Service struct {
 	Core *httpx.Core
 	Auth *auth.Service
 }
 
-const columns = `e.id::text,e.version,e.created_at,e.updated_at,e.name,e.note,e.archived_at,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=e.id AND g.reviewed_at<=now())`
+const columns = `e.id::text,e.version,e.created_at,e.updated_at,e.name,e.note,e.archived_at,(SELECT json_build_object('body',g.body,'sourceTitle',g.source_title,'sourceUrl',g.source_url,'reviewedAt',g.reviewed_at,'sourceAccessedAt',g.source_accessed_at) FROM technique_guides g WHERE g.exercise_id=e.id AND g.reviewed_at<=now()),e.user_id::text`
 
-func scan(row pgx.Row) (Exercise, error) {
+func scan(row pgx.Row, user string) (Exercise, error) {
 	var e Exercise
+	var owner string
 	var guide []byte
-	err := row.Scan(&e.ID, &e.Version, &e.CreatedAt, &e.UpdatedAt, &e.Name, &e.Note, &e.ArchivedAt, &guide)
+	err := row.Scan(&e.ID, &e.Version, &e.CreatedAt, &e.UpdatedAt, &e.Name, &e.Note, &e.ArchivedAt, &guide, &owner)
+	e.CanEdit = owner == user
+	if !e.CanEdit {
+		e.Note = ""
+	}
 	if err == nil && len(guide) > 0 {
 		err = json.Unmarshal(guide, &e.TechniqueGuide)
 	}
@@ -49,9 +55,9 @@ type Reader interface {
 	QueryRow(context.Context, string, ...any) pgx.Row
 }
 
-// Load returns the library identity and reviewed technique for an owned exercise.
+// Load returns a shared identity and technique, keeping the author's note private.
 func Load(ctx context.Context, db Reader, user, id string) (Exercise, error) {
-	return scan(db.QueryRow(ctx, `SELECT `+columns+` FROM exercises e WHERE e.user_id=$1 AND e.id=$2`, user, id))
+	return scan(db.QueryRow(ctx, `SELECT `+columns+` FROM exercises e WHERE e.id=$1`, id), user)
 }
 func (s *Service) RegisterRoutes(m *http.ServeMux) {
 	m.HandleFunc("GET /api/v1/exercises", s.Auth.Require(s.list))
@@ -64,7 +70,7 @@ func (s *Service) get(w http.ResponseWriter, r *http.Request, a auth.Actor) {
 		httpx.Error(w, httpx.Fail(404, "not_found"))
 		return
 	}
-	e, err := scan(s.Core.Pool.QueryRow(r.Context(), `SELECT `+columns+` FROM exercises e WHERE e.id=$1 AND e.user_id=$2`, r.PathValue("id"), a.User.ID))
+	e, err := Load(r.Context(), s.Core.Pool, a.User.ID, r.PathValue("id"))
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -85,7 +91,7 @@ func (s *Service) list(w http.ResponseWriter, r *http.Request, a auth.Actor) {
 		httpx.Error(w, err)
 		return
 	}
-	rows, err := s.Core.Pool.Query(r.Context(), `SELECT `+columns+` FROM exercises e WHERE user_id=$1 AND id>$2 AND ($3 OR archived_at IS NULL) AND strpos(normalized_name,$4)>0 ORDER BY id LIMIT $5`, a.User.ID, after, archived == "true", q, limit+1)
+	rows, err := s.Core.Pool.Query(r.Context(), `SELECT `+columns+` FROM exercises e WHERE id>$1 AND ($2 OR archived_at IS NULL) AND strpos(normalized_name,$3)>0 ORDER BY id LIMIT $4`, after, archived == "true", q, limit+1)
 	if err != nil {
 		httpx.Error(w, err)
 		return
@@ -93,7 +99,7 @@ func (s *Service) list(w http.ResponseWriter, r *http.Request, a auth.Actor) {
 	defer rows.Close()
 	items := []Exercise{}
 	for rows.Next() {
-		e, err := scan(rows)
+		e, err := scan(rows, a.User.ID)
 		if err != nil {
 			httpx.Error(w, err)
 			return
@@ -127,7 +133,7 @@ func (s *Service) create(w http.ResponseWriter, r *http.Request, a auth.Actor) {
 		return
 	}
 	s.Core.Rest(w, r, a, in, func(tx pgx.Tx) (httpx.Result, error) {
-		e, err := scan(tx.QueryRow(r.Context(), `INSERT INTO exercises AS e(id,user_id,name,normalized_name,note) VALUES($1,$2,$3,$4,$5) RETURNING `+columns, in.ID, a.User.ID, in.Name, strings.ToLower(in.Name), in.Note))
+		e, err := scan(tx.QueryRow(r.Context(), `INSERT INTO exercises AS e(id,user_id,name,normalized_name,note) VALUES($1,$2,$3,$4,$5) RETURNING `+columns, in.ID, a.User.ID, in.Name, strings.ToLower(in.Name), in.Note), a.User.ID)
 		if err == nil {
 			err = httpx.Change(r.Context(), tx, a.User.ID, "exercise", e.ID, "upsert", e.Version)
 		}
@@ -165,7 +171,7 @@ func (s *Service) patch(w http.ResponseWriter, r *http.Request, a auth.Actor) {
 		return
 	}
 	s.Core.Rest(w, r, a, in, func(tx pgx.Tx) (httpx.Result, error) {
-		e, err := scan(tx.QueryRow(r.Context(), `SELECT `+columns+` FROM exercises e WHERE e.user_id=$1 AND e.id=$2 FOR UPDATE`, a.User.ID, r.PathValue("id")))
+		e, err := scan(tx.QueryRow(r.Context(), `SELECT `+columns+` FROM exercises e WHERE e.user_id=$1 AND e.id=$2 FOR UPDATE`, a.User.ID, r.PathValue("id")), a.User.ID)
 		if err != nil {
 			return httpx.Result{}, err
 		}
@@ -185,7 +191,7 @@ func (s *Service) patch(w http.ResponseWriter, r *http.Request, a auth.Actor) {
 				e.ArchivedAt = &now
 			}
 		}
-		e, err = scan(tx.QueryRow(r.Context(), `UPDATE exercises AS e SET name=$3,normalized_name=$4,note=$5,archived_at=$6,version=version+1,updated_at=now() WHERE user_id=$1 AND id=$2 RETURNING `+columns, a.User.ID, e.ID, e.Name, strings.ToLower(e.Name), e.Note, e.ArchivedAt))
+		e, err = scan(tx.QueryRow(r.Context(), `UPDATE exercises AS e SET name=$3,normalized_name=$4,note=$5,archived_at=$6,version=version+1,updated_at=now() WHERE user_id=$1 AND id=$2 RETURNING `+columns, a.User.ID, e.ID, e.Name, strings.ToLower(e.Name), e.Note, e.ArchivedAt), a.User.ID)
 		if err == nil {
 			err = httpx.Change(r.Context(), tx, a.User.ID, "exercise", e.ID, "upsert", e.Version)
 		}

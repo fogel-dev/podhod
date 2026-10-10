@@ -1,3 +1,4 @@
+import { confirmAction } from '@/shared/lib/confirmation';
 import { useCallback, useRef, useState } from 'react';
 import { commandWorkout, getWorkoutHistory } from '@/entities/workout';
 import type { Workout, WorkoutCommand, WorkoutSet } from '@/entities/workout';
@@ -9,6 +10,7 @@ import { useUnsavedChanges } from '@/shared/lib/unsaved';
 import { dateLabel, duration } from '@/shared/lib/date';
 import type { Navigate } from '@/shared/lib/navigation';
 import { Dialog } from '@/shared/ui/dialog';
+import { Select } from '@/shared/ui/select';
 import { Icon, PageTitle, ResourceState } from '@/shared/ui/kit';
 type CommandData = WorkoutCommand extends infer C
   ? C extends WorkoutCommand
@@ -97,23 +99,23 @@ function History({ id }: { id: string }) {
         <ResourceState error={resource.error} retry={resource.reload} />
       ) : (
         <>
-          <label className="field">
-            Ревизия
-            <select
+          <div className="field">
+            <span>Ревизия</span>
+            <Select
+              label="Ревизия"
               value={selected}
-              onChange={(e) => setSelected(e.target.value)}
-            >
-              <option value="">Выберите версию</option>
-              {[...resource.data.items]
-                .sort((a, b) => b.revisionNo - a.revisionNo)
-                .map((item) => (
-                  <option key={item.id} value={item.id}>
-                    Версия {item.revisionNo}
-                    {item.reason ? ` · ${item.reason.slice(0, 80)}` : ''}
-                  </option>
-                ))}
-            </select>
-          </label>
+              onChange={setSelected}
+              options={[
+                { value: '', label: 'Выберите версию' },
+                ...[...resource.data.items]
+                  .sort((a, b) => b.revisionNo - a.revisionNo)
+                  .map((item) => ({
+                    value: item.id,
+                    label: `Версия ${item.revisionNo}${item.reason ? ` · ${item.reason.slice(0, 80)}` : ''}`,
+                  })),
+              ]}
+            />
+          </div>
           {revision && (
             <div className="surface">
               <p className="preserve-lines">
@@ -256,9 +258,9 @@ export function WorkoutSession({
             </button>
             <button
               className="secondary-button"
-              onClick={() => {
+              onClick={async () => {
                 if (
-                  window.confirm(
+                  await confirmAction(
                     'Загрузить состояние с сервера? Введённые неподтверждённые значения останутся только на этом экране до обновления.',
                   )
                 )
@@ -433,13 +435,13 @@ export function WorkoutSession({
           <button
             className="text-button wide"
             disabled={blocked}
-            onClick={() => {
+            onClick={async () => {
               const remains = allSets.some((set) => set.status === 'pending');
               if (
                 remains &&
-                !window.confirm(
+                !(await confirmAction(
                   'Завершить тренировку? Невыполненные подходы будут отмечены пропущенными.',
-                )
+                ))
               )
                 return;
               perform({
@@ -456,9 +458,9 @@ export function WorkoutSession({
           <button
             className="text-button wide"
             disabled={blocked}
-            onClick={() => {
+            onClick={async () => {
               if (
-                window.confirm(
+                await confirmAction(
                   'Отменить тренировку? Её подходы не попадут в прогресс.',
                 )
               )

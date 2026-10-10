@@ -1,3 +1,4 @@
+import { confirmAction } from '@/shared/lib/confirmation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   deletePhoto,
@@ -14,7 +15,7 @@ import { useObjectUrl } from '@/shared/lib/object-url';
 import { useUnsavedChanges } from '@/shared/lib/unsaved';
 import { dateLabel } from '@/shared/lib/date';
 import { Dialog } from '@/shared/ui/dialog';
-import { ResourceState } from '@/shared/ui/kit';
+import { Icon, ResourceState } from '@/shared/ui/kit';
 export function PhotoGallery({
   context,
   date,
@@ -60,7 +61,7 @@ export function PhotoGallery({
       <div className="row">
         <h2>Фотографии</h2>
         <button
-          className="text-button"
+          className="text-button transparent"
           disabled={action.busy}
           onClick={resource.reload}
         >
@@ -68,21 +69,29 @@ export function PhotoGallery({
         </button>
       </div>
       <p className="small muted">Видны только вам · до 20 фотографий в день.</p>
-      <label className="file-control">
+      <button
+        type="button"
+        className="file-control secondary-button"
+        disabled={action.busy}
+        onClick={() => input.current?.click()}
+      >
+        <Icon name="plus" />
         {retryId ? 'Выберите исходное фото для повтора' : 'Добавить фотографию'}
-        <input
-          ref={input}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          disabled={action.busy}
-          onChange={(event) => {
-            const selected = event.target.files?.[0];
-            setFile(selected);
-            uploadId.current = retryId ?? crypto.randomUUID();
-            action.clear();
-          }}
-        />
-      </label>
+      </button>
+      <input
+        hidden
+        aria-label="Выбрать фотографию"
+        ref={input}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        disabled={action.busy}
+        onChange={(event) => {
+          const selected = event.target.files?.[0];
+          setFile(selected);
+          uploadId.current = retryId ?? crypto.randomUUID();
+          action.clear();
+        }}
+      />
       {file && (
         <div className="upload-preview">
           {preview && (
@@ -176,10 +185,13 @@ export function PhotoGallery({
                     </button>
                   )}
                   <button
-                    className="text-button"
+                    className="photo-remove"
+                    aria-label={`Удалить фото ${photo.position}`}
+                    title="Удалить фотографию"
                     disabled={action.busy}
-                    onClick={() => {
-                      if (!window.confirm('Удалить эту фотографию?')) return;
+                    onClick={async () => {
+                      if (!(await confirmAction('Удалить эту фотографию?')))
+                        return;
                       void action.run(async () => {
                         await deletePhoto(context, photo);
                         resource.reload();
@@ -187,7 +199,7 @@ export function PhotoGallery({
                       });
                     }}
                   >
-                    Удалить
+                    <Icon name="close" />
                   </button>
                 </div>
               </figure>

@@ -13,8 +13,10 @@ import { useResource } from '@/shared/lib/resource';
 import type { Session } from '@/entities/user';
 import type { Tab } from '@/shared/lib/navigation';
 import { routeHash, scrollPositions, useNavigation } from './navigation';
+import { confirmAction } from '@/shared/lib/confirmation';
 import { today } from '@/shared/lib/date';
 import { Brand } from '@/shared/ui/brand';
+import { ThemeControl } from '@/shared/ui/theme';
 import { Icon } from '@/shared/ui/kit';
 
 const tabs: { view: Tab; label: string }[] = [
@@ -32,7 +34,7 @@ export function TrainingApp({
   onChanged: () => Promise<void>;
   onLogout: () => void;
 }) {
-  const { route, tab, navigate, back } = useNavigation();
+  const { route, tab, navigate, back } = useNavigation(confirmAction);
   const [months, setMonths] = useState({
     today: today(session.user.timezone).slice(0, 7),
     calendar: today(session.user.timezone).slice(0, 7),
@@ -70,13 +72,16 @@ export function TrainingApp({
       <div className="training-app">
         <header className="app-top">
           <Brand />
-          <button
-            className="round-icon"
-            aria-label="Настройки"
-            onClick={() => navigate({ view: 'account' })}
-          >
-            <Icon name="settings" />
-          </button>
+          <div className="header-controls">
+            <ThemeControl />
+            <button
+              className="round-icon"
+              aria-label="Настройки"
+              onClick={() => navigate({ view: 'account' })}
+            >
+              <Icon name="settings" />
+            </button>
+          </div>
         </header>
         <main
           ref={main}

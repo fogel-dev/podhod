@@ -13,7 +13,7 @@ import (
 
 func validPassword(password string) bool {
 	n := utf8.RuneCountInString(password)
-	return utf8.ValidString(password) && n >= 15 && n <= 128
+	return utf8.ValidString(password) && n >= 8 && n <= 128
 }
 
 func hashPassword(password string) string {

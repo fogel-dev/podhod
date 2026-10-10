@@ -78,7 +78,7 @@ export function TodayPage({
         onDay={(value) => navigate({ view: 'day', date: value })}
       />
       <button
-        className="text-button wide"
+        className="text-button wide program-link"
         onClick={() => navigate({ view: 'program' })}
       >
         Открыть программу

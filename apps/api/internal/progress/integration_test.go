@@ -131,7 +131,13 @@ func TestProgressUsesOnlyCurrentCompletedFacts(t *testing.T) {
 	if len(page.Items) != 1 {
 		t.Fatal(page)
 	}
-	domaintest.Status(t, a.Request(other, "GET", "/api/v1/progress/exercises/"+eid+"?from="+from+"&to="+to+"&metric=volume", nil, "", ""), 404)
+	sharedProgress := a.Request(other, "GET", "/api/v1/progress/exercises/"+eid+"?from="+from+"&to="+to+"&metric=volume", nil, "", "")
+	domaintest.Status(t, sharedProgress, 200)
+	var privateProgress Progress
+	domaintest.Decode(t, sharedProgress, &privateProgress)
+	if privateProgress.DataCount != 0 || len(privateProgress.Points) != 0 {
+		t.Fatal("shared library leaked another user's workout facts")
+	}
 	for _, q := range []string{"from=2020-01-01&to=2026-01-01&metric=volume", "from=2026-01-02&to=2026-01-01&metric=volume", "from=2026-01-01&to=2026-01-02&metric=plannedWeight", "from=2026-01-01&to=2026-01-02&metric=volume&bucket=day"} {
 		domaintest.Status(t, a.Request(c, "GET", "/api/v1/progress/exercises/"+eid+"?"+q, nil, "", ""), 422)
 	}

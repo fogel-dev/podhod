@@ -61,7 +61,6 @@ export function PasswordForm({
               type="password"
               autoComplete="current-password"
               required
-              minLength={15}
               maxLength={128}
             />
           </label>
@@ -72,7 +71,7 @@ export function PasswordForm({
               type="password"
               autoComplete="new-password"
               required
-              minLength={15}
+              minLength={8}
               maxLength={128}
             />
           </label>
@@ -83,7 +82,7 @@ export function PasswordForm({
               type="password"
               autoComplete="new-password"
               required
-              minLength={15}
+              minLength={8}
               maxLength={128}
             />
           </label>

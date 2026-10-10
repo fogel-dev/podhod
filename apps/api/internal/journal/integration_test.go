@@ -12,6 +12,37 @@ import (
 	"time"
 )
 
+func TestMultipleNotesOwnershipAndVersions(t *testing.T) {
+	app := domaintest.New(t)
+	(&Service{Core: app.Core, Auth: app.Auth}).RegisterRoutes(app.Mux)
+	a := app.User(t, "first")
+	b := app.User(t, "second")
+	date := "2026-10-15"
+	first, second := id.New(), id.New()
+	path := "/api/v1/days/" + date + "/notes/"
+	for _, noteID := range []string{first, second} {
+		domaintest.Status(t, app.Write(a, "PUT", path+noteID, map[string]any{"body": "Отдельная заметка"}, 0), 200)
+	}
+	var day Day
+	domaintest.Decode(t, app.Request(a, "GET", "/api/v1/days/"+date, nil, "", ""), &day)
+	if len(day.Notes) != 2 || day.Note == nil {
+		t.Fatal("notes missing")
+	}
+	domaintest.Status(t, app.Write(b, "PUT", path+first, map[string]any{"body": "Чужая правка"}, 1), 409)
+	domaintest.Status(t, app.Write(b, "DELETE", path+first, nil, 1), 404)
+	domaintest.Status(t, app.Write(a, "PUT", path+first, map[string]any{"body": "Правка"}, 1), 200)
+	domaintest.Status(t, app.Write(a, "PUT", path+first, map[string]any{"body": "Устаревшая правка"}, 1), 409)
+	domaintest.Status(t, app.Write(a, "DELETE", path+first, nil, 2), 204)
+	domaintest.Decode(t, app.Request(a, "GET", "/api/v1/days/"+date, nil, "", ""), &day)
+	if len(day.Notes) != 1 || day.Notes[0].ID != second {
+		t.Fatal("deleted sibling note")
+	}
+	domaintest.Decode(t, app.Request(b, "GET", "/api/v1/days/"+date, nil, "", ""), &day)
+	if len(day.Notes) != 0 || day.Note != nil {
+		t.Fatal("foreign notes leaked")
+	}
+}
+
 func TestNotesCalendarMovesAndDateStability(t *testing.T) {
 	app := domaintest.New(t)
 	(&Service{Core: app.Core, Auth: app.Auth}).RegisterRoutes(app.Mux)
