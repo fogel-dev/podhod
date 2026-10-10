@@ -14,7 +14,9 @@ import (
 	"github.com/fogel-dev/podhod/apps/api/internal/auth"
 	"github.com/fogel-dev/podhod/apps/api/internal/config"
 	"github.com/fogel-dev/podhod/apps/api/internal/database"
+	"github.com/fogel-dev/podhod/apps/api/internal/exercises"
 	"github.com/fogel-dev/podhod/apps/api/internal/httpserver"
+	"github.com/fogel-dev/podhod/apps/api/internal/httpx"
 )
 
 func main() {
@@ -51,6 +53,8 @@ func run(logger *slog.Logger) error {
 	}
 	server := httpserver.New(cfg.HTTPAddr, logger, database.Ready(pool))
 	access.RegisterRoutes(server.Handler.(*http.ServeMux))
+	core := httpx.New(pool, key)
+	(&exercises.Service{Core: core, Auth: access}).RegisterRoutes(server.Handler.(*http.ServeMux))
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()
 	logger.Info("API listening", "address", listener.Addr().String())
