@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/fogel-dev/podhod/apps/api/internal/config"
+	"github.com/fogel-dev/podhod/apps/api/internal/database"
 	"github.com/fogel-dev/podhod/apps/api/internal/httpserver"
 )
 
@@ -30,11 +31,16 @@ func run(logger *slog.Logger) error {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	pool, err := database.Open(ctx, cfg.DatabaseURL, 10)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
 	listener, err := net.Listen("tcp", cfg.HTTPAddr)
 	if err != nil {
 		return err
 	}
-	server := httpserver.New(cfg.HTTPAddr, logger)
+	server := httpserver.New(cfg.HTTPAddr, logger, database.Ready(pool))
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()
 	logger.Info("API listening", "address", listener.Addr().String())

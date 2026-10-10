@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -58,5 +60,31 @@ func TestServerHTTPAndShutdown(t *testing.T) {
 	if response, err := client.Get(base + "/api/health"); err == nil {
 		response.Body.Close()
 		t.Fatal("server still accepts requests after shutdown")
+	}
+}
+
+func TestReadiness(t *testing.T) {
+	for _, ready := range []bool{false, true} {
+		server := httpserver.New("", slog.Default(), func(ctx context.Context) error {
+			if !ready {
+				return errors.New("private DB detail")
+			}
+			return nil
+		})
+		response := httptest.NewRecorder()
+		server.Handler.ServeHTTP(response, httptest.NewRequest("GET", "/api/ready", nil))
+		want := 503
+		if ready {
+			want = 200
+		}
+		if response.Code != want {
+			t.Fatalf("status=%d want=%d", response.Code, want)
+		}
+		if response.Header().Get("Cache-Control") != "no-store" {
+			t.Fatal("readiness cache")
+		}
+		if strings.Contains(response.Body.String(), "private DB detail") {
+			t.Fatal("DB details leaked")
+		}
 	}
 }
