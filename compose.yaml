@@ -47,6 +47,22 @@ services:
       - '8080'
     restart: unless-stopped
     stop_grace_period: 15s
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    entrypoint: ['/worker']
+    environment:
+      DATABASE_URL_FILE: /run/secrets/worker_database_url
+      JOB_ENCRYPTION_KEY_FILE: /run/secrets/job_encryption_key
+    secrets:
+      - worker_database_url
+      - job_encryption_key
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    stop_grace_period: 15s
   web:
     build:
       context: .
@@ -73,3 +89,7 @@ secrets:
     file: ${PODHOD_SECRETS_DIR}/api_database_url
   migration_database_url:
     file: ${PODHOD_SECRETS_DIR}/migration_database_url
+  worker_database_url:
+    file: ${PODHOD_SECRETS_DIR}/worker_database_url
+  job_encryption_key:
+    file: ${PODHOD_SECRETS_DIR}/job_encryption_key

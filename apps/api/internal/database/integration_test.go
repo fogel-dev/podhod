@@ -2,65 +2,14 @@ package database
 
 import (
 	"context"
-	"crypto/rand"
-	"fmt"
-	"net/url"
-	"os"
 	"testing"
 	"time"
 
+	"github.com/fogel-dev/podhod/apps/api/internal/testdb"
 	"github.com/jackc/pgx/v5"
 )
 
-// A fresh real database per test; no test fixtures enter the application.
-func testDatabase(t *testing.T) string {
-	t.Helper()
-	connectionURL := os.Getenv("TEST_DATABASE_URL")
-	if connectionURL == "" {
-		t.Skip("TEST_DATABASE_URL required for PostgreSQL integration tests")
-	}
-	ctx := context.Background()
-	admin, err := pgx.Connect(ctx, connectionURL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var suffix [8]byte
-	_, _ = rand.Read(suffix[:])
-	name := fmt.Sprintf("podhod_test_%x", suffix[:])
-	if _, err = admin.Exec(ctx, "CREATE DATABASE "+pgx.Identifier{name}.Sanitize()); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		_, err := admin.Exec(ctx, "DROP DATABASE "+pgx.Identifier{name}.Sanitize()+" WITH (FORCE)")
-		if err != nil {
-			t.Error(err)
-		}
-		_ = admin.Close(ctx)
-	})
-	cfg, err := pgx.ParseConfig(connectionURL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cfg.Database = name
-	conn, err := pgx.ConnectConfig(ctx, cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bootstrap, err := os.ReadFile("../../db/bootstrap.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = conn.Exec(ctx, string(bootstrap)); err != nil {
-		t.Fatal(err)
-	}
-	_ = conn.Close(ctx)
-	parsed, err := url.Parse(connectionURL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	parsed.Path = "/" + name
-	return parsed.String()
-}
+func testDatabase(t *testing.T) string { return testdb.New(t) }
 
 func TestMigrationsAndPermissions(t *testing.T) {
 	url := testDatabase(t)
