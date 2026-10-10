@@ -5,6 +5,8 @@ import { ProgramPage } from '@/pages/program';
 import { ProgressPage } from '@/pages/progress';
 import { DayPage } from '@/pages/day';
 import { AccountPage } from '@/pages/account';
+import { ProgramEditorPage } from '@/pages/program-editor';
+import { LibraryPage } from '@/pages/library';
 import type { Session } from '@/entities/user';
 import type { Route, Tab } from '@/shared/lib/navigation';
 import { Brand } from '@/shared/ui/brand';
@@ -76,7 +78,17 @@ export function TrainingApp({
               navigate={navigate}
             />
           )}
-          {route.view === 'program' && <ProgramPage />}
+          {route.view === 'program' && (
+            <ProgramPage session={session} navigate={navigate} />
+          )}
+          {route.view === 'program-editor' && (
+            <ProgramEditorPage
+              id={route.id}
+              session={session}
+              navigate={navigate}
+            />
+          )}
+          {route.view === 'library' && <LibraryPage session={session} />}
           {route.view === 'progress' && <ProgressPage />}
           {route.view === 'day' && <DayPage date={route.date} />}
           {route.view === 'account' && (

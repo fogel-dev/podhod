@@ -49,6 +49,141 @@
 .round-icon:hover {
   background: var(--tint);
 }
+.screen h1:focus {
+  outline: none;
+}
+.exercise-card {
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 14px 16px 16px;
+  box-shadow: var(--shadow);
+  margin: 10px 0;
+}
+.exercise-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  padding: 0;
+  min-height: 44px;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.daypick {
+  display: flex;
+  justify-content: space-between;
+  margin: 16px -8px;
+}
+.daypick button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  font-size: 13px;
+  background: var(--tint);
+  color: var(--ink);
+  cursor: pointer;
+}
+.daypick button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.segment {
+  display: flex;
+  gap: 3px;
+  border-radius: 8px;
+  background: var(--tint);
+  padding: 3px;
+  margin: 20px 0;
+}
+.segment button {
+  flex: 1;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--secondary);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.segment button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--paper);
+  font-weight: 500;
+}
+.target-row,
+.target-head {
+  display: grid;
+  grid-template-columns: 25px 1.3fr 1fr 1fr;
+  gap: 6px;
+  align-items: center;
+  margin: 7px 0;
+}
+.target-head {
+  font-size: 11px;
+  color: var(--secondary);
+}
+.training-app .target-row input {
+  padding-inline: 6px;
+  background: var(--tint);
+  font-size: 14px;
+}
+.target-row span {
+  font-size: 13px;
+  color: var(--secondary);
+}
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+}
+.training-app .check-label input {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+.review-exercise {
+  padding: 12px 0;
+}
+.review-exercise strong {
+  font-size: 16px;
+  font-weight: 550;
+}
+.step-track {
+  display: flex;
+  gap: 5px;
+  margin: 12px 0 24px;
+}
+.step-track span {
+  height: 3px;
+  flex: 1;
+  background: var(--tint);
+}
+.step-track .filled {
+  background: var(--accent);
+}
+@media (max-width: 350px) {
+  .dates {
+    grid-template-columns: 1fr;
+  }
+  .daypick {
+    margin-inline: -16px;
+  }
+}
 .screen {
   position: relative;
   background: var(--canvas);
