@@ -1,0 +1,9 @@
+.git
+.tools
+**/node_modules
+**/dist
+**/bin
+**/.env
+**/.env.*
+design
+docs

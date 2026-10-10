@@ -1,0 +1,26 @@
+{
+  "name": "podhod",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=22.20.0 <23",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.6.1",
+  "scripts": {
+    "dev": "npm run dev --workspace @podhod/web",
+    "build": "npm run build --workspace @podhod/web",
+    "preview": "npm run preview --workspace @podhod/web",
+    "typecheck": "npm run typecheck --workspace @podhod/web",
+    "lint": "npm run lint --workspace @podhod/web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run typecheck && npm run lint && npm run test:architecture --workspace @podhod/web && npm run format:check"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}
