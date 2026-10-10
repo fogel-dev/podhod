@@ -19,6 +19,7 @@ type Service struct {
 }
 
 func (s *Service) RegisterRoutes(m *http.ServeMux) {
+	s.registerHistory(m)
 	for pattern, fn := range map[string]func(http.ResponseWriter, *http.Request, auth.Actor){"POST /api/v1/workouts": s.start, "GET /api/v1/workouts": s.list, "GET /api/v1/workouts/active": s.active, "GET /api/v1/workouts/{id}": s.get, "POST /api/v1/workouts/{id}/commands": s.command} {
 		m.HandleFunc(pattern, s.Auth.Require(fn))
 	}
@@ -240,6 +241,9 @@ func (s *Service) command(w http.ResponseWriter, r *http.Request, a auth.Actor) 
 		}
 		if value.Version != cmd.ExpectedVersion {
 			return httpx.Result{}, httpx.Fail(409, "version_conflict")
+		}
+		if cmd.Type == "correct_result" {
+			return correct(r.Context(), tx, a.User.ID, value, cmd)
 		}
 		if value.Status != "active" {
 			return httpx.Result{}, httpx.Fail(409, "workout_not_active")

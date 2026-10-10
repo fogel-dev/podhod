@@ -291,7 +291,7 @@ func validateResult(xs []Exercise, rests []Rest, start time.Time, finish *time.T
 	}
 	seen := map[string]bool{}
 	var priorEnd *time.Time
-	for _, r := range rests {
+	for index, r := range rests {
 		s, ok := sets[r.AfterSetID]
 		if !httpx.UUID(r.ID) || ids[r.ID] || seen[r.AfterSetID] || !ok || s.Status != "completed" || s.CompletedAt == nil || !r.StartedAt.Equal(*s.CompletedAt) || r.StartedAt.Before(start) || priorEnd != nil && r.StartedAt.Before(*priorEnd) {
 			return httpx.Fail(422, "invalid_rest")
@@ -299,15 +299,34 @@ func validateResult(xs []Exercise, rests []Rest, start time.Time, finish *time.T
 		ids[r.ID] = true
 		seen[r.AfterSetID] = true
 		if r.EndedAt == nil {
-			if finish != nil || r.EndReason != nil {
+			if finish != nil || r.EndReason != nil || index != len(rests)-1 {
 				return httpx.Fail(422, "open_rest_in_result")
 			}
 		} else {
 			if r.EndedAt.Before(r.StartedAt) || r.EndReason == nil || (*r.EndReason != "next_set" && *r.EndReason != "finish" && *r.EndReason != "correction") || finish != nil && r.EndedAt.After(*finish) {
 				return httpx.Fail(422, "invalid_rest")
 			}
+			nextStarted := false
+			for _, other := range sets {
+				if other.ID != r.AfterSetID && other.StartedAt != nil {
+					if other.StartedAt.After(r.StartedAt) && other.StartedAt.Before(*r.EndedAt) {
+						return httpx.Fail(422, "rest_overlaps_set")
+					}
+					if other.StartedAt.Equal(*r.EndedAt) {
+						nextStarted = true
+					}
+				}
+			}
+			if *r.EndReason == "next_set" && !nextStarted {
+				return httpx.Fail(422, "rest_missing_next_set")
+			}
 		}
 		priorEnd = r.EndedAt
+	}
+	for _, s := range sets {
+		if s.Status == "completed" && !seen[s.ID] {
+			return httpx.Fail(422, "completed_set_missing_rest")
+		}
 	}
 	return nil
 }
