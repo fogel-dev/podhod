@@ -78,10 +78,15 @@ export function TrainingApp({
             </button>
           )}
           {route.view === 'today' && (
-            <TodayPage timezone={session.user.timezone} navigate={navigate} />
+            <TodayPage
+              session={session}
+              timezone={session.user.timezone}
+              navigate={navigate}
+            />
           )}
           {route.view === 'calendar' && (
             <CalendarPage
+              session={session}
               timezone={session.user.timezone}
               navigate={navigate}
             />

@@ -1,6 +1,9 @@
 import { useCallback } from 'react';
 import { getDay, planStatus } from '@/entities/calendar';
 import { PlanCard } from '@/features/start-workout';
+import { DayNoteEditor } from '@/features/day-note';
+import { PhotoGallery } from '@/features/photo-gallery';
+import { ScheduleChange } from '@/features/schedule-change';
 import type { Session } from '@/entities/user';
 import type { Navigate } from '@/shared/lib/navigation';
 import { dateLabel } from '@/shared/lib/date';
@@ -29,22 +32,29 @@ export function DayPage({
         <ResourceState error={resource.error} retry={resource.reload} />
       ) : (
         <>
-          {resource.data.plans.map((plan) =>
-            plan.programRevisionId ? (
-              <PlanCard
-                key={plan.programId}
+          {resource.data.plans.map((plan) => (
+            <div key={plan.programId}>
+              {plan.programRevisionId ? (
+                <PlanCard
+                  key={plan.programId}
+                  plan={plan}
+                  context={session}
+                  navigate={navigate}
+                  onChanged={onChanged}
+                />
+              ) : (
+                <section className="surface" key={plan.programId}>
+                  <h2>{planStatus[plan.status]}</h2>
+                  <p className="muted">{dateLabel(plan.date)}</p>
+                </section>
+              )}
+              <ScheduleChange
                 plan={plan}
                 context={session}
-                navigate={navigate}
-                onChanged={onChanged}
+                onChanged={resource.reload}
               />
-            ) : (
-              <section className="surface" key={plan.programId}>
-                <h2>{planStatus[plan.status]}</h2>
-                <p className="muted">{dateLabel(plan.date)}</p>
-              </section>
-            ),
-          )}
+            </div>
+          ))}
           {resource.data.workouts.map((workout) => (
             <section className="surface" key={workout.id}>
               <h2>
@@ -66,15 +76,17 @@ export function DayPage({
               </button>
             </section>
           ))}
-          {resource.data.note && (
-            <section className="section">
-              <h2>Заметка</h2>
-              <p className="preserve-lines">{resource.data.note.body}</p>
-            </section>
-          )}
+          <DayNoteEditor
+            context={session}
+            date={date}
+            initial={resource.data.note}
+            onChanged={onChanged}
+          />
+          <PhotoGallery context={session} date={date} onChanged={onChanged} />
           {!resource.data.plans.length &&
             !resource.data.workouts.length &&
-            !resource.data.note && (
+            !resource.data.note &&
+            !resource.data.photos.items.length && (
               <Empty title="Записей пока нет">
                 <p className="muted">
                   Здесь будут планы и результаты этого дня.

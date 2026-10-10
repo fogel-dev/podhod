@@ -1,12 +1,15 @@
 import { useState } from 'react';
+import type { Session } from '@/entities/user';
 import { MonthCalendar } from '@/widgets/month-calendar';
 import { today } from '@/shared/lib/date';
 import type { Navigate } from '@/shared/lib/navigation';
 import { PageTitle } from '@/shared/ui/kit';
 export function CalendarPage({
+  session,
   timezone,
   navigate,
 }: {
+  session: Session;
   timezone: string;
   navigate: Navigate;
 }) {
@@ -16,6 +19,7 @@ export function CalendarPage({
     <>
       <PageTitle title="Календарь" subtitle="Тренировки и записи" />
       <MonthCalendar
+        context={session}
         month={month}
         onMonth={setMonth}
         currentDate={date}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '@/shared/api';
 
 export function message(error: unknown) {
@@ -17,6 +17,7 @@ export function useResource<T>(
 ) {
   const [revision, setRevision] = useState(0);
   const identity = `${key}:${revision}`;
+  const reload = useCallback(() => setRevision((value) => value + 1), []);
   const [state, setState] = useState<{ key: string; data?: T; error?: string }>(
     { key: '' },
   );
@@ -36,6 +37,6 @@ export function useResource<T>(
   return {
     data: state.key === identity ? state.data : undefined,
     error: state.key === identity ? state.error : undefined,
-    reload: () => setRevision((value) => value + 1),
+    reload,
   };
 }

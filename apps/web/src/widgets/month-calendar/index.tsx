@@ -1,14 +1,18 @@
 import { useCallback } from 'react';
 import { getCalendar, planStatus } from '@/entities/calendar';
+import { PhotoImage } from '@/entities/photo';
+import type { WriteContext } from '@/shared/api';
 import { useResource } from '@/shared/lib/resource';
 import { dateLabel, dateObject, shiftMonth, weekdays } from '@/shared/lib/date';
 import { Icon, ResourceState } from '@/shared/ui/kit';
 export function MonthCalendar({
+  context,
   month,
   onMonth,
   currentDate,
   onDay,
 }: {
+  context: WriteContext;
   month: string;
   onMonth: (month: string) => void;
   currentDate: string;
@@ -77,7 +81,23 @@ export function MonthCalendar({
                 ) : null}
                 {day.notePresent && <span className="note-dot" />}
                 {day.photoCount > 0 && (
-                  <span className="photo-count">{day.photoCount} фото</span>
+                  <span className="photo-stack" aria-hidden="true">
+                    {day.thumbnailPhotoIds.map((id) => (
+                      <PhotoImage
+                        key={id}
+                        context={context}
+                        id={id}
+                        alt=""
+                        compact
+                      />
+                    ))}
+                    {day.photoCount > 2 && (
+                      <span className="stack-count">+{day.photoCount - 2}</span>
+                    )}
+                    {!day.thumbnailPhotoIds.length && (
+                      <span className="photo-count">{day.photoCount} фото</span>
+                    )}
+                  </span>
                 )}
               </span>
             </button>
