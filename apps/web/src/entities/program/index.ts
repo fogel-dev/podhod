@@ -5,6 +5,14 @@ export type Program = components['schemas']['Program'];
 export type ProgramRevision = components['schemas']['ProgramRevision'];
 export type ProgramRevisionInput =
   components['schemas']['ProgramRevisionInput'];
+export const getProgramRevision = (
+  id: string,
+  revisionId: string,
+  signal: AbortSignal,
+) =>
+  request<ProgramRevision>(`/programs/${id}/revisions/${revisionId}`, {
+    signal,
+  });
 export const createProgram = (
   context: WriteContext,
   input: components['schemas']['CreateProgram'],

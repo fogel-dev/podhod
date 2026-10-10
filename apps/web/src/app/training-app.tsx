@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { TodayPage } from '@/pages/today';
 import { CalendarPage } from '@/pages/calendar';
 import { ProgramPage } from '@/pages/program';
@@ -7,6 +7,9 @@ import { DayPage } from '@/pages/day';
 import { AccountPage } from '@/pages/account';
 import { ProgramEditorPage } from '@/pages/program-editor';
 import { LibraryPage } from '@/pages/library';
+import { WorkoutPage } from '@/pages/workout';
+import { getActiveWorkout } from '@/entities/workout';
+import { useResource } from '@/shared/lib/resource';
 import type { Session } from '@/entities/user';
 import type { Route, Tab } from '@/shared/lib/navigation';
 import { Brand } from '@/shared/ui/brand';
@@ -31,6 +34,11 @@ export function TrainingApp({
   const [tab, setTab] = useState<Tab>('today');
   const stack = useRef<Route[]>([]);
   const main = useRef<HTMLElement>(null);
+  const loadActive = useCallback(
+    (signal: AbortSignal) => getActiveWorkout(signal),
+    [],
+  );
+  const active = useResource(`active:${JSON.stringify(route)}`, loadActive);
   function navigate(next: Route) {
     stack.current.push(route);
     setRoute(next);
@@ -90,7 +98,22 @@ export function TrainingApp({
           )}
           {route.view === 'library' && <LibraryPage session={session} />}
           {route.view === 'progress' && <ProgressPage />}
-          {route.view === 'day' && <DayPage date={route.date} />}
+          {route.view === 'day' && (
+            <DayPage
+              date={route.date}
+              session={session}
+              navigate={navigate}
+              onChanged={active.reload}
+            />
+          )}
+          {route.view === 'workout' && (
+            <WorkoutPage
+              id={route.id}
+              session={session}
+              navigate={navigate}
+              onChanged={active.reload}
+            />
+          )}
           {route.view === 'account' && (
             <AccountPage
               session={session}
@@ -100,6 +123,16 @@ export function TrainingApp({
             />
           )}
         </main>
+        {active.data && route.view !== 'workout' && (
+          <button
+            className="active-workout-link"
+            onClick={() => navigate({ view: 'workout', id: active.data!.id })}
+          >
+            <Icon name="program" />
+            Вернуться к тренировке
+            <Icon name="next" />
+          </button>
+        )}
       </div>
       <nav className="bottom-nav" aria-label="Разделы приложения">
         {tabs.map((item) => (
