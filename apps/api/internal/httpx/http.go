@@ -135,6 +135,17 @@ type Core struct {
 }
 
 func New(pool *pgxpool.Pool, key string) *Core { k, _ := hex.DecodeString(key); return &Core{pool, k} }
+func (c *Core) Read(ctx context.Context) (pgx.Tx, error) {
+	tx, e := c.Pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
+	if e != nil {
+		return nil, e
+	}
+	if _, e = tx.Exec(ctx, `SET LOCAL statement_timeout='5s'`); e != nil {
+		_ = tx.Rollback(context.Background())
+		return nil, e
+	}
+	return tx, nil
+}
 func (c *Core) Rest(w http.ResponseWriter, r *http.Request, a auth.Actor, input any, fn func(pgx.Tx) (Result, error)) {
 	c.Command(w, r, a, r.Header.Get("Idempotency-Key"), r.Header.Get("X-Device-Id"), input, fn)
 }
