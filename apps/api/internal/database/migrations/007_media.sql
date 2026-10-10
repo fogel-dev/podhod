@@ -1,0 +1,14 @@
+ALTER TABLE photos ADD COLUMN processing_job_id uuid REFERENCES jobs(id);
+ALTER TABLE photos ADD COLUMN staging_cleaned boolean NOT NULL DEFAULT false;
+CREATE UNIQUE INDEX photos_staging_key ON photos(staging_key);
+CREATE INDEX photos_processing_job ON photos(processing_job_id) WHERE status='processing';
+GRANT INSERT,UPDATE ON photos TO podhod_api;
+GRANT SELECT(dedupe_key) ON jobs TO podhod_api;
+GRANT SELECT,UPDATE ON photos TO podhod_worker;
+GRANT SELECT(id,status) ON users TO podhod_worker;
+GRANT SELECT,UPDATE ON sync_heads TO podhod_worker;
+GRANT INSERT ON change_log TO podhod_worker;
+CREATE TABLE retired_photo_files (key text PRIMARY KEY,size_bytes bigint NOT NULL CHECK(size_bytes>=0),user_id uuid NOT NULL REFERENCES users(id));
+GRANT SELECT,INSERT ON retired_photo_files TO podhod_api;
+GRANT SELECT,DELETE ON retired_photo_files TO podhod_worker;
+GRANT SELECT,DELETE ON retired_photo_files TO podhod_cleanup;

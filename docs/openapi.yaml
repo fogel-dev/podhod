@@ -3162,6 +3162,147 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PasswordChange'
+  /api/v1/photos/{id}/content:
+    put:
+      tags:
+        - Photos
+      description: 'Приватный filesystem adapter ADR-004. Сессия владельца и
+        подписанная capability обязательны. Cache-Control: no-store. Ключи
+        хранилища не передаются клиенту.'
+      operationId: uploadPhotoContent
+      summary: Загрузить исходные байты фотографии
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 2048
+          description:
+            Подписанная capability с TTL; требуется активная сессия владельца.
+            URL не журналировать.
+        - $ref: '#/components/parameters/Csrf'
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '204':
+          description: Загрузка сохранена; далее complete
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '415':
+          description: Неверный MIME
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
+  /api/v1/photos/{id}/content/{variant}:
+    get:
+      tags:
+        - Photos
+      description: 'Приватный filesystem adapter ADR-004. Сессия владельца и
+        подписанная capability обязательны. Cache-Control: no-store. Ключи
+        хранилища не передаются клиенту.'
+      operationId: readPhotoContent
+      summary: Прочитать готовую фотографию или миниатюру
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 2048
+          description:
+            Подписанная capability с TTL; требуется активная сессия владельца.
+            URL не журналировать.
+        - name: variant
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - image
+              - thumbnail
+      responses:
+        '200':
+          description: Приватный JPEG без EXIF/GPS
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                  - no-store
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '413':
+          $ref: '#/components/responses/Error413'
+        '415':
+          description: Неверный MIME
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+        '503':
+          $ref: '#/components/responses/Error503'
 components:
   securitySchemes:
     session:

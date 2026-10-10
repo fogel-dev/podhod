@@ -1020,6 +1020,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/photos/{id}/content': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Загрузить исходные байты фотографии
+     * @description Приватный filesystem adapter ADR-004. Сессия владельца и подписанная capability обязательны. Cache-Control: no-store. Ключи хранилища не передаются клиенту.
+     */
+    put: operations['uploadPhotoContent'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/photos/{id}/content/{variant}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Прочитать готовую фотографию или миниатюру
+     * @description Приватный filesystem adapter ADR-004. Сессия владельца и подписанная capability обязательны. Cache-Control: no-store. Ключи хранилища не передаются клиенту.
+     */
+    get: operations['readPhotoContent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4543,6 +4583,101 @@ export interface operations {
       415: components['responses']['Error415'];
       422: components['responses']['Error422'];
       429: components['responses']['Error429'];
+      500: components['responses']['Error500'];
+      503: components['responses']['Error503'];
+    };
+  };
+  uploadPhotoContent: {
+    parameters: {
+      query: {
+        /** @description Подписанная capability с TTL; требуется активная сессия владельца. URL не журналировать. */
+        token: string;
+      };
+      header: {
+        /** @description Токен текущей сессии. Также обязательна проверка Origin. */
+        'X-CSRF-Token': components['parameters']['Csrf'];
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'image/jpeg': string;
+        'image/png': string;
+        'image/webp': string;
+      };
+    };
+    responses: {
+      /** @description Загрузка сохранена; далее complete */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components['responses']['Error400'];
+      401: components['responses']['Error401'];
+      403: components['responses']['Error403'];
+      404: components['responses']['Error404'];
+      409: components['responses']['Error409'];
+      413: components['responses']['Error413'];
+      /** @description Неверный MIME */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelope'];
+        };
+      };
+      422: components['responses']['Error422'];
+      500: components['responses']['Error500'];
+      503: components['responses']['Error503'];
+    };
+  };
+  readPhotoContent: {
+    parameters: {
+      query: {
+        /** @description Подписанная capability с TTL; требуется активная сессия владельца. URL не журналировать. */
+        token: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+        variant: 'image' | 'thumbnail';
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Приватный JPEG без EXIF/GPS */
+      200: {
+        headers: {
+          'Cache-Control'?: 'no-store';
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': string;
+        };
+      };
+      400: components['responses']['Error400'];
+      401: components['responses']['Error401'];
+      403: components['responses']['Error403'];
+      404: components['responses']['Error404'];
+      409: components['responses']['Error409'];
+      413: components['responses']['Error413'];
+      /** @description Неверный MIME */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelope'];
+        };
+      };
+      422: components['responses']['Error422'];
       500: components['responses']['Error500'];
       503: components['responses']['Error503'];
     };

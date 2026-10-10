@@ -39,11 +39,16 @@ services:
       HTTP_ADDR: 0.0.0.0:8080
       DATABASE_URL_FILE: /run/secrets/api_database_url
       AUTH_HMAC_KEY_FILE: /run/secrets/auth_hmac_key
+      JOB_ENCRYPTION_KEY_FILE: /run/secrets/job_encryption_key
+      MEDIA_DIR: /var/lib/podhod/media
       PUBLIC_ORIGIN: http://127.0.0.1:8080
       AUTH_INSECURE_LOCAL: '1'
     secrets:
       - api_database_url
       - auth_hmac_key
+      - job_encryption_key
+    volumes:
+      - ${PODHOD_MEDIA_DIR:?Set an absolute private directory owned by 65532}/:/var/lib/podhod/media
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -59,9 +64,12 @@ services:
     environment:
       DATABASE_URL_FILE: /run/secrets/worker_database_url
       JOB_ENCRYPTION_KEY_FILE: /run/secrets/job_encryption_key
+      MEDIA_DIR: /var/lib/podhod/media
     secrets:
       - worker_database_url
       - job_encryption_key
+    volumes:
+      - ${PODHOD_MEDIA_DIR}/:/var/lib/podhod/media
     depends_on:
       migrate:
         condition: service_completed_successfully

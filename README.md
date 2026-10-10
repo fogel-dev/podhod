@@ -64,11 +64,12 @@ go build -trimpath -o bin/api ./cmd/api
 
 ```sh
 export PODHOD_SECRETS_DIR="/tmp/podhod-dev-secrets"
+export PODHOD_MEDIA_DIR="/tmp/podhod-dev-media"
 node tooling/dev/secrets.mjs
 docker compose up --build
 ```
 
-В PowerShell задайте `$env:PODHOD_SECRETS_DIR = Join-Path $env:TEMP 'podhod-dev-secrets'`, затем выполните команды `node` и `docker compose`. Скрипт создаёт случайные пароли вне репозитория, не печатает и не заменяет существующие значения. Это каталог для разработки; production требует постоянного защищённого каталога и резервной копии секретов.
+В PowerShell задайте `$env:PODHOD_SECRETS_DIR = Join-Path $env:TEMP 'podhod-dev-secrets'` и `$env:PODHOD_MEDIA_DIR = Join-Path $env:TEMP 'podhod-dev-media'`, затем выполните команды `node` и `docker compose`. На Linux заранее создайте media каталог с владельцем 65532:65532 и mode 0700. Скрипт создаёт случайные пароли вне репозитория, не печатает и не заменяет существующие значения. Это каталоги для разработки; production требует постоянных защищённых каталогов и внешних резервных копий БД, фото и секретов. При запуске Go напрямую задайте абсолютный MEDIA_DIR и JOB_ENCRYPTION_KEY_FILE вместе с auth/database переменными из apps/api/.env.example.
 
 Compose запускает PostgreSQL в закрытой сети, создаёт отдельные login/runtime роли и применяет миграции перед API. Вне Compose администратор выполняет `apps/api/db/bootstrap.sql`, создаёт login роли и выдаёт членство в `podhod_migrator`, `podhod_api`, `podhod_worker`. `go run ./cmd/migrate` запускается с migration подключением, API — с runtime подключением. Миграции встроены в binary, сериализуются advisory lock и проверяются по SHA-256; изменять применённые файлы запрещено.
 

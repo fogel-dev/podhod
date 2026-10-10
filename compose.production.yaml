@@ -107,8 +107,12 @@ services:
       TRUSTED_PROXY_CIDRS: ${PODHOD_UPSTREAM_SUBNET:-172.30.80.0/28}
       DATABASE_URL_FILE: /run/secrets/api_database_url
       AUTH_HMAC_KEY_FILE: /run/secrets/auth_hmac_key
+      JOB_ENCRYPTION_KEY_FILE: /run/secrets/job_encryption_key
+      MEDIA_DIR: /var/lib/podhod/media
       GOMEMLIMIT: 160MiB
-    secrets: [api_database_url, auth_hmac_key]
+    secrets: [api_database_url, auth_hmac_key, job_encryption_key]
+    volumes:
+      - ${PODHOD_STATE_DIR}/media:/var/lib/podhod/media
     tmpfs: ['/tmp:size=16m,mode=1777']
     networks: [upstream, database, outbound]
     mem_limit: 256m
@@ -123,8 +127,11 @@ services:
     environment:
       DATABASE_URL_FILE: /run/secrets/worker_database_url
       JOB_ENCRYPTION_KEY_FILE: /run/secrets/job_encryption_key
+      MEDIA_DIR: /var/lib/podhod/media
       GOMEMLIMIT: 256MiB
     secrets: [worker_database_url, job_encryption_key]
+    volumes:
+      - ${PODHOD_STATE_DIR}/media:/var/lib/podhod/media
     tmpfs: ['/tmp:size=32m,mode=1777']
     networks: [database, outbound]
     mem_limit: 384m

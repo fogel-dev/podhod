@@ -11,13 +11,16 @@ import (
 	"syscall"
 	"time"
 
+	"encoding/hex"
 	"github.com/fogel-dev/podhod/apps/api/internal/auth"
 	"github.com/fogel-dev/podhod/apps/api/internal/config"
 	"github.com/fogel-dev/podhod/apps/api/internal/database"
 	"github.com/fogel-dev/podhod/apps/api/internal/exercises"
 	"github.com/fogel-dev/podhod/apps/api/internal/httpserver"
 	"github.com/fogel-dev/podhod/apps/api/internal/httpx"
+	"github.com/fogel-dev/podhod/apps/api/internal/jobs"
 	"github.com/fogel-dev/podhod/apps/api/internal/journal"
+	"github.com/fogel-dev/podhod/apps/api/internal/media"
 	"github.com/fogel-dev/podhod/apps/api/internal/programs"
 	"github.com/fogel-dev/podhod/apps/api/internal/workouts"
 )
@@ -50,6 +53,19 @@ func run(logger *slog.Logger) error {
 	if err != nil {
 		return err
 	}
+	disk, err := media.NewDisk(os.Getenv("MEDIA_DIR"))
+	if err != nil {
+		return err
+	}
+	defer disk.Root.Close()
+	jobKey, err := config.Secret("JOB_ENCRYPTION_KEY")
+	if err != nil {
+		return err
+	}
+	cipher, err := jobs.NewCipher(jobKey)
+	if err != nil {
+		return err
+	}
 	listener, err := net.Listen("tcp", cfg.HTTPAddr)
 	if err != nil {
 		return err
@@ -61,6 +77,8 @@ func run(logger *slog.Logger) error {
 	(&programs.Service{Core: core, Auth: access}).RegisterRoutes(server.Handler.(*http.ServeMux))
 	(&workouts.Service{Core: core, Auth: access}).RegisterRoutes(server.Handler.(*http.ServeMux))
 	(&journal.Service{Core: core, Auth: access}).RegisterRoutes(server.Handler.(*http.ServeMux))
+	mediaKey, _ := hex.DecodeString(key)
+	(&media.Service{Core: core, Auth: access, Store: disk, Queue: jobs.New(pool, cipher), Key: mediaKey}).RegisterRoutes(server.Handler.(*http.ServeMux))
 	done := make(chan error, 1)
 	go func() { done <- server.Serve(listener) }()
 	logger.Info("API listening", "address", listener.Addr().String())

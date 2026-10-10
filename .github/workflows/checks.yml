@@ -60,6 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PODHOD_SECRETS_DIR: /tmp/podhod-ci-secrets
+      PODHOD_MEDIA_DIR: /tmp/podhod-ci-media
       COMPOSE_PROJECT_NAME: podhod
     steps:
       - uses: actions/checkout@v4
