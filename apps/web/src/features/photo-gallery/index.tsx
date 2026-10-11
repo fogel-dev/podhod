@@ -1,6 +1,7 @@
 import { confirmAction } from '@/shared/lib/confirmation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  MAX_PHOTOS_PER_DAY,
   deletePhoto,
   getPhotos,
   PhotoImage,
@@ -33,12 +34,20 @@ export function PhotoGallery({
   const [file, setFile] = useState<File>();
   const [viewing, setViewing] = useState<Photo | null>(null);
   const [moveDate, setMoveDate] = useState(date);
-  const uploadId = useRef<string>('');
+  const [uploadId, setUploadId] = useState('');
   const [retryId, setRetryId] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const action = useAction();
   const preview = useObjectUrl(file);
   useUnsavedChanges(!!file || action.busy);
+  const limitReached = (resource.data?.items.length ?? 0) >= MAX_PHOTOS_PER_DAY;
+  const selectionBlocked =
+    action.busy || !resource.data || (limitReached && !retryId);
+  const uploadBlocked =
+    action.busy ||
+    !resource.data ||
+    (limitReached &&
+      !resource.data.items.some((photo) => photo.id === uploadId));
   const processing = resource.data?.items.some(
     (photo) => photo.status === 'processing',
   );
@@ -49,11 +58,14 @@ export function PhotoGallery({
   }, [processing, resource.reload]);
   async function sendFile() {
     if (!file) return;
-    await uploadPhoto(context, file, date, uploadId.current);
+    try {
+      await uploadPhoto(context, file, date, uploadId);
+    } finally {
+      resource.reload();
+    }
     setFile(undefined);
     setRetryId(null);
     if (input.current) input.current.value = '';
-    resource.reload();
     onChanged();
   }
   return (
@@ -68,11 +80,16 @@ export function PhotoGallery({
           Обновить
         </button>
       </div>
-      <p className="small muted">Видны только вам · до 20 фотографий в день.</p>
+      <p className="small muted">Видны только вам · максимум 2 фото на день.</p>
+      {limitReached && (
+        <p className="small muted" role="status">
+          Лимит на этот день достигнут. Удалите фото, чтобы добавить новое.
+        </p>
+      )}
       <button
         type="button"
         className="file-control secondary-button"
-        disabled={action.busy}
+        disabled={selectionBlocked}
         onClick={() => input.current?.click()}
       >
         <Icon name="plus" />
@@ -88,7 +105,7 @@ export function PhotoGallery({
         onChange={(event) => {
           const selected = event.target.files?.[0];
           setFile(selected);
-          uploadId.current = retryId ?? crypto.randomUUID();
+          setUploadId(retryId ?? crypto.randomUUID());
           action.clear();
         }}
       />
@@ -103,7 +120,7 @@ export function PhotoGallery({
           <div className="actions">
             <button
               className="primary"
-              disabled={action.busy}
+              disabled={uploadBlocked}
               onClick={() => void action.run(sendFile)}
             >
               {action.busy
@@ -177,7 +194,7 @@ export function PhotoGallery({
                       disabled={action.busy}
                       onClick={() => {
                         setRetryId(photo.id);
-                        uploadId.current = photo.id;
+                        setUploadId(photo.id);
                         input.current?.click();
                       }}
                     >

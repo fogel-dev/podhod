@@ -1,6 +1,7 @@
 import { ApiError, request, write } from '@/shared/api';
 import type { components, WriteContext } from '@/shared/api';
 export type Photo = components['schemas']['Photo'];
+export const MAX_PHOTOS_PER_DAY = 2;
 export { PhotoImage } from './image';
 export const getPhoto = (id: string) => request<Photo>(`/photos/${id}`);
 export const getPhotos = (date: string, signal: AbortSignal) =>

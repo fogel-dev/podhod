@@ -21,6 +21,7 @@ import (
 )
 
 const MaxBytes int64 = 10 << 20
+const MaxPhotosPerDay = 2
 const accountLimit int64 = 1 << 30
 const globalLimit int64 = 2 << 30
 
@@ -148,7 +149,7 @@ func dayLimit(ctx context.Context, tx pgx.Tx, user, date, except string) error {
 	if err != nil {
 		return err
 	}
-	if n >= 20 {
+	if n >= MaxPhotosPerDay {
 		return httpx.Fail(409, "photo_day_quota")
 	}
 	return nil

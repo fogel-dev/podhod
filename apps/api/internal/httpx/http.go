@@ -47,7 +47,11 @@ func Error(w http.ResponseWriter, err error) {
 			status, code = 409, "conflict"
 		}
 	}
-	JSON(w, status, map[string]any{"error": map[string]any{"code": code, "message": "Не удалось выполнить запрос", "requestId": id.New()}})
+	message := "Не удалось выполнить запрос"
+	if code == "photo_day_quota" {
+		message = "На этот день можно добавить максимум 2 фотографии. Удалите одну, чтобы добавить новую."
+	}
+	JSON(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "requestId": id.New()}})
 }
 func JSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")

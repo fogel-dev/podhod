@@ -224,7 +224,7 @@ func TestPhotoInvalidBytesExpiryRenewAndParallelQuota(t *testing.T) {
 	var mu sync.Mutex
 	ok, conflicts := 0, 0
 	var wg sync.WaitGroup
-	for range 22 {
+	for range 4 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -242,7 +242,7 @@ func TestPhotoInvalidBytesExpiryRenewAndParallelQuota(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	if ok != 20 || conflicts != 2 {
+	if ok != 2 || conflicts != 2 {
 		t.Fatal(ok, conflicts)
 	}
 	if _, e = admin.Exec(ctx, `UPDATE photos SET status='failed',stored_bytes=1073741824 WHERE id=$1`, u.PhotoID); e != nil {
@@ -294,5 +294,93 @@ func TestImageLimitsOrientationAndDiskTraversal(t *testing.T) {
 	r := httptest.NewRequest("GET", u, nil)
 	if s.authorize(r, p, "image") == nil {
 		t.Fatal("expired capability accepted")
+	}
+}
+
+func TestTwoPhotosPerDayRetryDeleteMoveAndIsolation(t *testing.T) {
+	a, c, _, _ := fixture(t)
+	data := jpegData(t)
+	hash := sha256.Sum256(data)
+	checksum := hex.EncodeToString(hash[:])
+	date := "2026-10-14"
+	first := reservePhoto(t, a, c, data, date)
+	second := reservePhoto(t, a, c, data, date)
+	admin, err := database.Open(context.Background(), a.URL, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer admin.Close()
+	if _, err = admin.Exec(context.Background(), "UPDATE photos SET status='failed' WHERE id=$1", second.PhotoID); err != nil {
+		t.Fatal(err)
+	}
+	input := map[string]any{"id": id.New(), "localDate": date, "mimeType": "image/jpeg", "sizeBytes": len(data), "checksumSha256": checksum}
+	response := a.Write(c, "POST", "/api/v1/photos/uploads", input, 0)
+	domaintest.Status(t, response, 409)
+	if !strings.Contains(response.Body.String(), "photo_day_quota") || !strings.Contains(response.Body.String(), "максимум 2") {
+		t.Fatal(response.Body.String())
+	}
+	// A full date must still allow renewing an existing reservation and uploading bytes.
+	response = a.Write(c, "POST", "/api/v1/photos/"+first.PhotoID+"/upload-url", Complete{first.Version, checksum}, 0)
+	domaintest.Status(t, response, 200)
+	var renewed Upload
+	domaintest.Decode(t, response, &renewed)
+	domaintest.Status(t, put(a, c, renewed, data), 204)
+	completed := completePhoto(t, a, c, renewed, data)
+	// Processing records count, and another account has its own independent quota.
+	domaintest.Status(t, a.Write(c, "POST", "/api/v1/photos/uploads", input, 0), 409)
+	other := a.User(t, "ownphotos")
+	reservePhoto(t, a, other, data, date)
+	reservePhoto(t, a, other, data, date)
+	source := reservePhoto(t, a, c, data, "2026-10-15")
+	response = a.Write(c, "PATCH", "/api/v1/photos/"+source.PhotoID, map[string]any{"localDate": date}, source.Version)
+	domaintest.Status(t, response, 409)
+	domaintest.Status(t, a.Write(c, "DELETE", "/api/v1/photos/"+completed.ID, nil, completed.Version), 204)
+	domaintest.Status(t, a.Write(c, "PATCH", "/api/v1/photos/"+source.PhotoID, map[string]any{"localDate": date}, source.Version), 200)
+	domaintest.Status(t, a.Write(c, "POST", "/api/v1/photos/uploads", input, 0), 409)
+	domaintest.Status(t, a.Write(c, "DELETE", "/api/v1/photos/"+second.PhotoID, nil, second.Version), 204)
+	// The same command can be replayed when the day is full without creating a third photo.
+	receipt := id.New()
+	response = a.Request(c, "POST", "/api/v1/photos/uploads", input, receipt, "\"0\"")
+	domaintest.Status(t, response, 201)
+	domaintest.Status(t, a.Request(c, "POST", "/api/v1/photos/uploads", input, receipt, "\"0\""), 201)
+	page, err := Day(context.Background(), a.Core.Pool, c.Session.User.ID, date)
+	if err != nil || len(page.Items) != 2 {
+		t.Fatal(page, err)
+	}
+}
+
+func TestConcurrentPhotoMovesRespectDailyLimit(t *testing.T) {
+	a, c, _, _ := fixture(t)
+	data := jpegData(t)
+	target := "2026-10-16"
+	reservePhoto(t, a, c, data, target)
+	sources := []Upload{
+		reservePhoto(t, a, c, data, "2026-10-17"),
+		reservePhoto(t, a, c, data, "2026-10-18"),
+	}
+	results := make(chan int, len(sources))
+	for _, photo := range sources {
+		go func(p Upload) {
+			r := a.Write(c, "PATCH", "/api/v1/photos/"+p.PhotoID, map[string]any{"localDate": target}, p.Version)
+			results <- r.Code
+		}(photo)
+	}
+	successes, conflicts := 0, 0
+	for range sources {
+		switch status := <-results; status {
+		case 200:
+			successes++
+		case 409:
+			conflicts++
+		default:
+			t.Errorf("move status %d", status)
+		}
+	}
+	if successes != 1 || conflicts != 1 {
+		t.Fatal(successes, conflicts)
+	}
+	page, err := Day(context.Background(), a.Core.Pool, c.Session.User.ID, target)
+	if err != nil || len(page.Items) != 2 {
+		t.Fatal(page, err)
 	}
 }

@@ -3,7 +3,9 @@ import { ApiError } from '@/shared/api';
 
 export function message(error: unknown) {
   if (error instanceof ApiError && error.status === 409)
-    return 'Запись изменилась на другом устройстве. Обновите данные перед повторным сохранением.';
+    return error.message === 'Не удалось выполнить запрос'
+      ? 'Запись изменилась на другом устройстве. Обновите данные перед повторным сохранением.'
+      : error.message;
   if (error instanceof ApiError && error.status === 401)
     return 'Сессия завершена. Войдите снова.';
   return error instanceof ApiError

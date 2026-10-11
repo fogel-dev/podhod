@@ -619,7 +619,7 @@ export interface paths {
     put?: never;
     /**
      * reservePhotoUpload
-     * @description Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля ответа клиент игнорирует.
+     * @description Правила в docs/api.md и docs/backend.md. Неизвестные поля запроса отклоняются, поля ответа клиент игнорирует. Максимум 2 неудалённые фотографии на дату пользователя, включая pending/processing/failed; превышение возвращает 409 photo_day_quota.
      */
     post: operations['reservePhotoUpload'];
     delete?: never;
