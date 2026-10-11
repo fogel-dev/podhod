@@ -37,10 +37,16 @@ for (const name of [
   'PODHOD_PROXY_IMAGE',
   'PODHOD_DB_IMAGE',
 ]) {
-  if (
-    !/^[a-zA-Z0-9][a-zA-Z0-9._/:\-]*@sha256:[a-f0-9]{64}$/.test(env[name] ?? '')
-  )
-    throw new Error(`${name} must specify an immutable image digest.`);
+  const value = env[name] ?? '';
+  const registryDigest =
+    /^[a-zA-Z0-9][a-zA-Z0-9._/:\-]*@sha256:[a-f0-9]{64}$/.test(value);
+  const loadedImageId =
+    ['PODHOD_API_IMAGE', 'PODHOD_WEB_IMAGE'].includes(name) &&
+    /^sha256:[a-f0-9]{64}$/.test(value);
+  if (!registryDigest && !loadedImageId)
+    throw new Error(
+      `${name} must specify an immutable image digest or application image ID.`,
+    );
 }
 for (const name of ['PODHOD_STATE_DIR', 'PODHOD_SECRETS_DIR']) {
   const value = env[name] ?? '';
