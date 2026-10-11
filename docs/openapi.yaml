@@ -5581,6 +5581,12 @@ components:
           nullable: true
           allOf:
             - $ref: '#/components/schemas/BodyWeight'
+        bodyWeightSuggestion:
+          description: Последняя запись строго до даты дня; подсказка, не фактическое измерение этого дня.
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/BodyWeight'
       required:
         - date
         - plans

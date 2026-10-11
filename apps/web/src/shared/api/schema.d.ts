@@ -1890,6 +1890,8 @@ export interface components {
       photos: components['schemas']['PhotoPage'];
       notes: components['schemas']['DayNote'][];
       bodyWeight: components['schemas']['BodyWeight'] | null;
+      /** @description Последняя запись строго до даты дня; подсказка, не фактическое измерение этого дня. */
+      bodyWeightSuggestion?: components['schemas']['BodyWeight'] | null;
     };
     ProgressPoint: {
       /** Format: date */

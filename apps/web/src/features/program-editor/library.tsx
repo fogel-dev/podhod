@@ -14,10 +14,13 @@ import { Empty, ResourceState } from '@/shared/ui/kit';
 export function ExerciseLibrary({
   context,
   onSelect,
+  selectionLimit = 100,
 }: {
   context: WriteContext;
-  onSelect?: (exercise: Exercise) => void;
+  onSelect?: (exercises: Exercise[]) => void;
+  selectionLimit?: number;
 }) {
+  const [selected, setSelected] = useState<Exercise[]>([]);
   const [query, setQuery] = useState('');
   const [archived, setArchived] = useState(false);
   const [editing, setEditing] = useState<Exercise | null>(null);
@@ -49,7 +52,10 @@ export function ExerciseLibrary({
               : await createExercise(context, { id, name: name.trim(), note });
             setForm(false);
             resource.reload();
-            if (!editing) onSelect?.(saved);
+            if (!editing && onSelect)
+              setSelected((items) =>
+                items.length < selectionLimit ? [...items, saved] : items,
+              );
           });
         }}
       >
@@ -128,6 +134,18 @@ export function ExerciseLibrary({
           </label>
         )}
       </div>
+      {onSelect && (
+        <div className="library-selection">
+          <span className="small muted">Выбрано: {selected.length}</span>
+          <button
+            className="primary"
+            disabled={!selected.length}
+            onClick={() => onSelect(selected)}
+          >
+            Добавить выбранные ({selected.length})
+          </button>
+        </div>
+      )}
       <p role="alert">{action.error}</p>
       {!resource.data ? (
         <ResourceState error={resource.error} retry={resource.reload} />
@@ -136,13 +154,25 @@ export function ExerciseLibrary({
           <article className="exercise-card" key={exercise.id}>
             <div className="row">
               {onSelect ? (
-                <button
-                  className="exercise-name"
-                  disabled={!!exercise.archivedAt}
-                  onClick={() => onSelect(exercise)}
-                >
-                  {exercise.name}
-                </button>
+                <label className="check-label exercise-choice">
+                  <input
+                    type="checkbox"
+                    checked={selected.some((item) => item.id === exercise.id)}
+                    disabled={
+                      !!exercise.archivedAt ||
+                      (selected.length >= selectionLimit &&
+                        !selected.some((item) => item.id === exercise.id))
+                    }
+                    onChange={(event) =>
+                      setSelected((items) =>
+                        event.target.checked
+                          ? [...items, exercise]
+                          : items.filter((item) => item.id !== exercise.id),
+                      )
+                    }
+                  />
+                  <strong>{exercise.name}</strong>
+                </label>
               ) : (
                 <h3>{exercise.name}</h3>
               )}

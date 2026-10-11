@@ -43,7 +43,11 @@ export function ProgressPage({
       {view === 'weight' ? (
         <BodyWeightProgress timezone={timezone} navigate={navigate} />
       ) : !resource.data ? (
-        <ResourceState error={resource.error} retry={resource.reload} />
+        <ResourceState
+          layout="progress"
+          error={resource.error}
+          retry={resource.reload}
+        />
       ) : resource.data.items.length ? (
         <ProgressView
           exercises={resource.data.items}

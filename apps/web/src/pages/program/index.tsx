@@ -39,7 +39,7 @@ export function ProgramPage({
         <ResourceState error={resource.error} retry={resource.reload} />
       ) : resource.data.items.length ? (
         resource.data.items.map((program) => (
-          <section className="surface" key={program.id}>
+          <section className="surface program-summary" key={program.id}>
             <h2>{program.name}</h2>
             <p className="muted small">
               {dateLabel(program.currentRevision.startDate)} —{' '}

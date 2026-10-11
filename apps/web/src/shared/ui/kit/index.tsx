@@ -15,10 +15,14 @@ export function Icon({
     | 'sun'
     | 'moon'
     | 'close'
-    | 'chevron-down';
+    | 'chevron-down'
+    | 'chevron-up'
+    | 'trash';
 }) {
   const paths = {
     'chevron-down': 'M6 9l6 6 6-6',
+    'chevron-up': 'M6 15l6-6 6 6',
+    trash: 'M4 6h16 M9 6V3h6v3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7',
     close: 'M6 6l12 12 M18 6L6 18',
     sun: 'M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8 M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l1.5 1.5 M17.5 17.5L19 19 M5 19l1.5-1.5 M17.5 6.5L19 5',
     moon: 'M20 14a8 8 0 0 1-10-10A8 8 0 1 0 20 14z',
@@ -57,9 +61,11 @@ export function Empty({
 export function ResourceState({
   error,
   retry,
+  layout = 'list',
 }: {
   error?: string | undefined;
   retry: () => void;
+  layout?: SkeletonLayout;
 }) {
   return error ? (
     <div className="state-message">
@@ -69,9 +75,7 @@ export function ResourceState({
       </button>
     </div>
   ) : (
-    <p className="state-message" role="status">
-      Загружаем…
-    </p>
+    <Skeleton layout={layout} />
   );
 }
 export function PageTitle({
@@ -91,5 +95,98 @@ export function PageTitle({
         {action}
       </div>
     </header>
+  );
+}
+
+type SkeletonLayout =
+  | 'list'
+  | 'today'
+  | 'calendar'
+  | 'day'
+  | 'editor'
+  | 'progress'
+  | 'workout'
+  | 'access';
+export function Skeleton({
+  layout = 'list',
+  cells = 35,
+}: {
+  layout?: SkeletonLayout;
+  cells?: number;
+}) {
+  return (
+    <div
+      className={`skeleton skeleton-${layout}`}
+      role="status"
+      aria-label="Загрузка страницы"
+      aria-busy="true"
+    >
+      <div aria-hidden="true">
+        {layout === 'calendar' ? (
+          <div className="calendar-grid">
+            {Array.from({ length: cells }, (_, index) => (
+              <div className="calendar-day" key={index}>
+                <span className="skeleton-block skeleton-number" />
+              </div>
+            ))}
+          </div>
+        ) : layout === 'today' ? (
+          <div className="surface skeleton-card">
+            <span className="skeleton-block skeleton-title" />
+            <span className="skeleton-block skeleton-control" />
+          </div>
+        ) : layout === 'editor' || layout === 'access' ? (
+          <>
+            <span className="skeleton-block skeleton-line" />
+            {Array.from({ length: 3 }, (_, index) => (
+              <div className="skeleton-field" key={index}>
+                <span className="skeleton-block skeleton-label" />
+                <span className="skeleton-block skeleton-control" />
+              </div>
+            ))}
+          </>
+        ) : layout === 'day' ? (
+          <>
+            <div className="section">
+              <span className="skeleton-block skeleton-title" />
+              <span className="skeleton-block skeleton-title" />
+            </div>
+            <div className="section">
+              <span className="skeleton-block skeleton-title" />
+              <div className="note-board">
+                {[0, 1, 2].map((index) => (
+                  <span className="skeleton-block skeleton-note" key={index} />
+                ))}
+              </div>
+              <span className="skeleton-block skeleton-control" />
+            </div>
+            <div className="section">
+              <span className="skeleton-block skeleton-title" />
+              <span className="skeleton-block skeleton-control" />
+            </div>
+          </>
+        ) : layout === 'progress' ? (
+          <>
+            <span className="skeleton-block skeleton-control" />
+            <div className="skeleton-block skeleton-chart" />
+            <span className="skeleton-block skeleton-line" />
+          </>
+        ) : (
+          <>
+            {layout === 'workout' && (
+              <span className="skeleton-block skeleton-title" />
+            )}
+            {Array.from({ length: 2 }, (_, index) => (
+              <div className="surface skeleton-card" key={index}>
+                <span className="skeleton-block skeleton-title" />
+                <span className="skeleton-block skeleton-line" />
+                <span className="skeleton-block skeleton-line short" />
+                <span className="skeleton-block skeleton-control" />
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    </div>
   );
 }

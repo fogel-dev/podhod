@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getDevices, revokeDevice, updateTimezone } from '@/entities/user';
 import type { Device, Session } from '@/entities/user';
+import { Skeleton } from '@/shared/ui/kit';
+import { withMinimumLoading } from '@/shared/lib/loading';
 import { ApiError } from '@/shared/api';
 
 export function TimezoneSettings({
@@ -78,8 +80,9 @@ export function DevicesSettings({
     [loading, setLoading] = useState(true);
   useEffect(() => {
     const controller = new AbortController();
-    void getDevices(controller.signal)
+    void withMinimumLoading(getDevices(controller.signal), controller.signal)
       .then((data) => {
+        if (controller.signal.aborted) return;
         setDevices(data.items);
         setMessage('');
       })
@@ -124,7 +127,7 @@ export function DevicesSettings({
   return (
     <section className="settings-section">
       <h2>Устройства</h2>
-      {loading && <p role="status">Загрузка…</p>}
+      {loading && <Skeleton />}
       <ul className="device-list">
         {devices.map((device) => (
           <li key={device.id}>

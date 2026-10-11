@@ -4,7 +4,7 @@ import { PhotoImage } from '@/entities/photo';
 import type { WriteContext } from '@/shared/api';
 import { useResource } from '@/shared/lib/resource';
 import { dateLabel, dateObject, shiftMonth, weekdays } from '@/shared/lib/date';
-import { Icon, ResourceState } from '@/shared/ui/kit';
+import { Icon, ResourceState, Skeleton } from '@/shared/ui/kit';
 export function MonthCalendar({
   context,
   month,
@@ -57,7 +57,19 @@ export function MonthCalendar({
         ))}
       </div>
       {!resource.data ? (
-        <ResourceState error={resource.error} retry={resource.reload} />
+        resource.error ? (
+          <ResourceState error={resource.error} retry={resource.reload} />
+        ) : (
+          <Skeleton
+            layout="calendar"
+            cells={
+              offset +
+              new Date(
+                Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5)), 0),
+              ).getUTCDate()
+            }
+          />
+        )
       ) : (
         <div className="calendar-grid">
           {Array.from({ length: offset }, (_, i) => (

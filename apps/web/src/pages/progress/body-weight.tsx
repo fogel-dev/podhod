@@ -52,7 +52,11 @@ export function BodyWeightProgress({
         ))}
       </div>
       {!resource.data ? (
-        <ResourceState error={resource.error} retry={resource.reload} />
+        <ResourceState
+          layout="progress"
+          error={resource.error}
+          retry={resource.reload}
+        />
       ) : last && first ? (
         <>
           <div className="metric">

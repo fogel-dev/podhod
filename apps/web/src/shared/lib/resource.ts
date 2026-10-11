@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { withMinimumLoading } from './loading';
 import { ApiError } from '@/shared/api';
 
 export function message(error: unknown) {
@@ -25,7 +26,7 @@ export function useResource<T>(
   );
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal).then(
+    void withMinimumLoading(load(controller.signal), controller.signal).then(
       (data) => {
         if (!controller.signal.aborted) setState({ key: identity, data });
       },

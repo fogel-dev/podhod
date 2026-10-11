@@ -14,6 +14,8 @@ import {
   weekdays,
 } from '@/shared/lib/date';
 import { ExerciseLibrary } from './library';
+import { useExerciseReorder } from './reorder';
+import { Icon } from '@/shared/ui/kit';
 import { Select } from '@/shared/ui/select';
 import { DatePicker } from '@/shared/ui/date-picker';
 export { ExerciseLibrary } from './library';
@@ -22,8 +24,8 @@ const freshTarget = (position: number) => ({
   id: crypto.randomUUID(),
   position,
   weightKg: '0.00',
-  repsMin: 10,
-  repsMax: 10,
+  repsMin: 12,
+  repsMax: 15,
 });
 function copyExercises(items: PlanExerciseInput[]) {
   return items.map((item) => ({
@@ -78,8 +80,15 @@ export function ProgramEditor({
       ) ?? [],
     ),
   );
-  const [selected, setSelected] = useState(days[0]?.weekday ?? 1);
+  const [selected, setSelected] = useState(
+    days.length ? Math.min(...days.map((day) => day.weekday)) : 1,
+  );
   const [picker, setPicker] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>(
+    initial?.days.flatMap((day) =>
+      day.exercises[0] ? [day.exercises[0].id] : [],
+    ) ?? [],
+  );
   const [copying, setCopying] = useState(false);
   const [targets, setTargets] = useState<number[]>([]);
   const fingerprint = JSON.stringify([name, start, end, effective, zone, days]);
@@ -98,18 +107,41 @@ export function ProgramEditor({
       ),
     );
   }
-  function addExercise(exercise: Exercise) {
-    setNames((current) => ({ ...current, [exercise.id]: exercise.name }));
-    updateExercises((items) => [
-      ...items,
-      {
+  function moveExercise(from: number, to: number) {
+    updateExercises((items) => {
+      const reordered = [...items];
+      const [moved] = reordered.splice(from, 1);
+      if (!moved) return items;
+      reordered.splice(to, 0, moved);
+      return reordered.map((item, index) => ({ ...item, position: index + 1 }));
+    });
+  }
+  const {
+    list: reorderList,
+    drag,
+    start: startDrag,
+    move: moveDrag,
+    finish: finishDrag,
+    style: dragStyle,
+  } = useExerciseReorder(moveExercise);
+  function addExercises(exercises: Exercise[]) {
+    setNames((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        exercises.map((exercise) => [exercise.id, exercise.name]),
+      ),
+    }));
+    const added = exercises
+      .slice(0, 100 - (activeDay?.exercises.length ?? 0))
+      .map((exercise, index) => ({
         id: crypto.randomUUID(),
         exerciseId: exercise.id,
-        position: items.length + 1,
+        position: (activeDay?.exercises.length ?? 0) + index + 1,
         note: exercise.note,
         targets: [freshTarget(1), freshTarget(2), freshTarget(3)],
-      },
-    ]);
+      }));
+    updateExercises((items) => [...items, ...added]);
+    setExpanded(added.length ? [added[added.length - 1]!.id] : []);
     setPicker(false);
   }
   const validDays =
@@ -130,13 +162,19 @@ export function ProgramEditor({
           <button className="text-button" onClick={() => setPicker(false)}>
             К упражнениям дня
           </button>
-          <ExerciseLibrary context={context} onSelect={addExercise} />
+          <ExerciseLibrary
+            context={context}
+            onSelect={addExercises}
+            selectionLimit={100 - (activeDay?.exercises.length ?? 0)}
+          />
         </>
       ) : (
         <form
           onSubmit={(event) => {
             event.preventDefault();
             if (step < 3) {
+              if (step === 1)
+                setSelected(Math.min(...days.map((day) => day.weekday)));
               setStep(step + 1);
               return;
             }
@@ -298,206 +336,311 @@ export function ProgramEditor({
                     Открыть выбранный день
                   </button>
                 )}
-                {activeDay?.exercises.map((exercise, index) => (
-                  <article className="exercise-card" key={exercise.id}>
-                    <div className="row">
-                      <h3>{names[exercise.exerciseId]}</h3>
-                      <button
-                        type="button"
-                        className="text-button"
-                        aria-label={`Удалить ${names[exercise.exerciseId]}`}
-                        onClick={() =>
-                          updateExercises((items) =>
-                            items
-                              .filter((item) => item.id !== exercise.id)
-                              .map((item, i) => ({ ...item, position: i + 1 })),
-                          )
-                        }
-                      >
-                        Убрать
-                      </button>
-                    </div>
-                    <div className="actions">
-                      <button
-                        type="button"
-                        className="text-button"
-                        disabled={index === 0}
-                        onClick={() =>
-                          updateExercises((items) => {
-                            const reordered = [...items];
-                            [reordered[index - 1], reordered[index]] = [
-                              reordered[index]!,
-                              reordered[index - 1]!,
-                            ];
-                            return reordered.map((item, i) => ({
-                              ...item,
-                              position: i + 1,
-                            }));
-                          })
-                        }
-                      >
-                        Выше
-                      </button>
-                    </div>
-                    <div className="target-head" aria-hidden="true">
-                      <span>Подход</span>
-                      <span>Кг</span>
-                      <span>От</span>
-                      <span>До</span>
-                    </div>
-                    {exercise.targets.map((target, targetIndex) => (
-                      <div className="target-row" key={target.id}>
-                        <span>{targetIndex + 1}</span>
-                        <input
-                          aria-label={`Вес подхода ${targetIndex + 1}, кг`}
-                          type="number"
-                          inputMode="decimal"
-                          min="0"
-                          max="99999.99"
-                          step="0.01"
-                          required
-                          value={target.weightKg ?? ''}
-                          onChange={(e) =>
+                <div className="reorder-list" ref={reorderList}>
+                  {activeDay?.exercises.map((exercise, index) => (
+                    <article
+                      className={`exercise-card reorder-card ${drag?.id === exercise.id ? 'is-dragging' : ''} ${expanded.includes(exercise.id) ? '' : 'is-collapsed'}`}
+                      key={exercise.id}
+                      data-exercise-id={exercise.id}
+                      style={dragStyle(exercise.id, index)}
+                    >
+                      <div className="exercise-drag-header">
+                        <button
+                          type="button"
+                          className="drag-handle"
+                          aria-label={`Перетащить ${names[exercise.exerciseId]}`}
+                          disabled={activeDay.exercises.length < 2}
+                          onPointerDown={(event) =>
+                            startDrag(event, exercise.id)
+                          }
+                          onPointerMove={moveDrag}
+                          onPointerUp={() => finishDrag()}
+                          onPointerCancel={() => finishDrag(true)}
+                          onLostPointerCapture={() => finishDrag(true)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Escape') finishDrag(true);
+                            if (event.key === 'ArrowUp' && index > 0) {
+                              event.preventDefault();
+                              moveExercise(index, index - 1);
+                            }
+                            if (
+                              event.key === 'ArrowDown' &&
+                              index < activeDay.exercises.length - 1
+                            ) {
+                              event.preventDefault();
+                              moveExercise(index, index + 1);
+                            }
+                          }}
+                        >
+                          <svg
+                            width="20"
+                            height="24"
+                            viewBox="0 0 20 24"
+                            aria-hidden="true"
+                          >
+                            {[6, 12, 18].map((y) => (
+                              <g key={y}>
+                                <circle cx="7" cy={y} r="1.5" />
+                                <circle cx="13" cy={y} r="1.5" />
+                              </g>
+                            ))}
+                          </svg>
+                        </button>
+                        <h3>{names[exercise.exerciseId]}</h3>
+                        <button
+                          type="button"
+                          className="round-icon exercise-delete"
+                          aria-label={`Удалить ${names[exercise.exerciseId]}`}
+                          onClick={() =>
                             updateExercises((items) =>
-                              items.map((item) =>
-                                item.id === exercise.id
-                                  ? {
-                                      ...item,
-                                      targets: item.targets.map((t) =>
-                                        t.id === target.id
-                                          ? {
-                                              ...t,
-                                              weightKg:
-                                                e.target.value === ''
-                                                  ? null
-                                                  : e.target.value,
-                                            }
-                                          : t,
-                                      ),
-                                    }
-                                  : item,
-                              ),
+                              items
+                                .filter((item) => item.id !== exercise.id)
+                                .map((item, i) => ({
+                                  ...item,
+                                  position: i + 1,
+                                })),
                             )
                           }
-                        />
-                        <input
-                          aria-label={`Минимум повторений подхода ${targetIndex + 1}`}
-                          type="number"
-                          min="1"
-                          max="1000"
-                          required
-                          value={target.repsMin}
-                          onChange={(e) =>
-                            updateExercises((items) =>
-                              items.map((item) =>
-                                item.id === exercise.id
-                                  ? {
-                                      ...item,
-                                      targets: item.targets.map((t) =>
-                                        t.id === target.id
-                                          ? {
-                                              ...t,
-                                              repsMin: Number(e.target.value),
-                                            }
-                                          : t,
-                                      ),
-                                    }
-                                  : item,
-                              ),
+                        >
+                          <Icon name="trash" />
+                        </button>
+                        <button
+                          type="button"
+                          className="round-icon"
+                          aria-expanded={expanded.includes(exercise.id)}
+                          aria-controls={`exercise-settings-${exercise.id}`}
+                          aria-label={`${expanded.includes(exercise.id) ? 'Свернуть' : 'Развернуть'} ${names[exercise.exerciseId]}`}
+                          onClick={() =>
+                            setExpanded((items) =>
+                              items.includes(exercise.id)
+                                ? items.filter((id) => id !== exercise.id)
+                                : [...items, exercise.id],
                             )
                           }
-                        />
-                        <input
-                          aria-label={`Максимум повторений подхода ${targetIndex + 1}`}
-                          type="number"
-                          min={target.repsMin}
-                          max="1000"
-                          required
-                          value={target.repsMax}
-                          onChange={(e) =>
-                            updateExercises((items) =>
-                              items.map((item) =>
-                                item.id === exercise.id
-                                  ? {
-                                      ...item,
-                                      targets: item.targets.map((t) =>
-                                        t.id === target.id
-                                          ? {
-                                              ...t,
-                                              repsMax: Number(e.target.value),
-                                            }
-                                          : t,
-                                      ),
-                                    }
-                                  : item,
-                              ),
-                            )
-                          }
-                        />
+                        >
+                          <Icon
+                            name={
+                              expanded.includes(exercise.id)
+                                ? 'chevron-up'
+                                : 'chevron-down'
+                            }
+                          />
+                        </button>
                       </div>
-                    ))}
-                    <p className="field-hint">Целевые повторения: от / до.</p>
-                    <div className="actions">
-                      <button
-                        type="button"
-                        className="text-button"
-                        disabled={exercise.targets.length >= 100}
-                        onClick={() =>
-                          updateExercises((items) =>
-                            items.map((item) =>
-                              item.id === exercise.id
-                                ? {
-                                    ...item,
-                                    targets: [
-                                      ...item.targets,
-                                      freshTarget(item.targets.length + 1),
-                                    ],
-                                  }
-                                : item,
-                            ),
-                          )
-                        }
+                      <div
+                        className="exercise-settings"
+                        id={`exercise-settings-${exercise.id}`}
+                        onInvalidCapture={(event) => {
+                          if (expanded.includes(exercise.id)) return;
+                          event.preventDefault();
+                          const field = event.target as HTMLElement;
+                          setExpanded((items) =>
+                            items.includes(exercise.id)
+                              ? items
+                              : [...items, exercise.id],
+                          );
+                          requestAnimationFrame(() => field.focus());
+                        }}
                       >
-                        Добавить подход
-                      </button>
-                      <button
-                        type="button"
-                        className="text-button"
-                        disabled={exercise.targets.length <= 1}
-                        onClick={() =>
-                          updateExercises((items) =>
-                            items.map((item) =>
-                              item.id === exercise.id
-                                ? {
-                                    ...item,
-                                    targets: item.targets.slice(0, -1),
-                                  }
-                                : item,
-                            ),
-                          )
-                        }
-                      >
-                        Убрать последний
-                      </button>
-                    </div>
-                    <label className="field">
-                      Заметка к упражнению
-                      <textarea
-                        maxLength={10000}
-                        value={exercise.note}
-                        onChange={(e) =>
-                          updateExercises((items) =>
-                            items.map((item) =>
-                              item.id === exercise.id
-                                ? { ...item, note: e.target.value }
-                                : item,
-                            ),
-                          )
-                        }
-                      />
-                    </label>
-                  </article>
-                ))}
+                        <div className="target-head" aria-hidden="true">
+                          <span>Подход</span>
+                          <span>Кг</span>
+                          <span>От</span>
+                          <span>До</span>
+                        </div>
+                        {exercise.targets.map((target, targetIndex) => (
+                          <div className="target-group" key={target.id}>
+                            <div className="target-row">
+                              <span>{targetIndex + 1}</span>
+                              <input
+                                aria-label={`Вес подхода ${targetIndex + 1}, кг`}
+                                type="number"
+                                inputMode="decimal"
+                                min="0"
+                                max="99999.99"
+                                step="0.01"
+                                required
+                                value={target.weightKg ?? ''}
+                                onChange={(e) =>
+                                  updateExercises((items) =>
+                                    items.map((item) =>
+                                      item.id === exercise.id
+                                        ? {
+                                            ...item,
+                                            targets: item.targets.map((t) =>
+                                              t.id === target.id
+                                                ? {
+                                                    ...t,
+                                                    weightKg:
+                                                      e.target.value === ''
+                                                        ? null
+                                                        : e.target.value,
+                                                  }
+                                                : t,
+                                            ),
+                                          }
+                                        : item,
+                                    ),
+                                  )
+                                }
+                              />
+                              <input
+                                aria-label={`Минимум повторений подхода ${targetIndex + 1}`}
+                                type="number"
+                                min="1"
+                                max="1000"
+                                required
+                                value={target.repsMin}
+                                onChange={(e) =>
+                                  updateExercises((items) =>
+                                    items.map((item) =>
+                                      item.id === exercise.id
+                                        ? {
+                                            ...item,
+                                            targets: item.targets.map((t) =>
+                                              t.id === target.id
+                                                ? {
+                                                    ...t,
+                                                    repsMin: Number(
+                                                      e.target.value,
+                                                    ),
+                                                  }
+                                                : t,
+                                            ),
+                                          }
+                                        : item,
+                                    ),
+                                  )
+                                }
+                              />
+                              <input
+                                aria-label={`Максимум повторений подхода ${targetIndex + 1}`}
+                                type="number"
+                                min={target.repsMin}
+                                max="1000"
+                                required
+                                value={target.repsMax}
+                                onChange={(e) =>
+                                  updateExercises((items) =>
+                                    items.map((item) =>
+                                      item.id === exercise.id
+                                        ? {
+                                            ...item,
+                                            targets: item.targets.map((t) =>
+                                              t.id === target.id
+                                                ? {
+                                                    ...t,
+                                                    repsMax: Number(
+                                                      e.target.value,
+                                                    ),
+                                                  }
+                                                : t,
+                                            ),
+                                          }
+                                        : item,
+                                    ),
+                                  )
+                                }
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              className="text-button target-copy"
+                              disabled={exercise.targets.length < 2}
+                              aria-label={`Повторить параметры подхода ${targetIndex + 1} во всех подходах`}
+                              onClick={() =>
+                                updateExercises((items) =>
+                                  items.map((item) =>
+                                    item.id === exercise.id
+                                      ? {
+                                          ...item,
+                                          targets: item.targets.map(
+                                            (other) => ({
+                                              ...other,
+                                              weightKg: target.weightKg,
+                                              repsMin: target.repsMin,
+                                              repsMax: target.repsMax,
+                                            }),
+                                          ),
+                                        }
+                                      : item,
+                                  ),
+                                )
+                              }
+                            >
+                              Повторить во всех
+                            </button>
+                          </div>
+                        ))}
+                        <p className="field-hint">
+                          Целевые повторения: от / до.
+                        </p>
+                        <div className="actions">
+                          <button
+                            type="button"
+                            className="text-button"
+                            disabled={exercise.targets.length >= 100}
+                            onClick={() =>
+                              updateExercises((items) =>
+                                items.map((item) =>
+                                  item.id === exercise.id
+                                    ? {
+                                        ...item,
+                                        targets: [
+                                          ...item.targets,
+                                          freshTarget(item.targets.length + 1),
+                                        ],
+                                      }
+                                    : item,
+                                ),
+                              )
+                            }
+                          >
+                            Добавить подход
+                          </button>
+                          <button
+                            type="button"
+                            className="text-button"
+                            disabled={exercise.targets.length <= 1}
+                            onClick={() =>
+                              updateExercises((items) =>
+                                items.map((item) =>
+                                  item.id === exercise.id
+                                    ? {
+                                        ...item,
+                                        targets: item.targets.slice(0, -1),
+                                      }
+                                    : item,
+                                ),
+                              )
+                            }
+                          >
+                            Убрать последний
+                          </button>
+                        </div>
+                        <label className="field">
+                          Заметка к упражнению
+                          <textarea
+                            maxLength={10000}
+                            value={exercise.note}
+                            onChange={(e) =>
+                              updateExercises((items) =>
+                                items.map((item) =>
+                                  item.id === exercise.id
+                                    ? { ...item, note: e.target.value }
+                                    : item,
+                                ),
+                              )
+                            }
+                          />
+                        </label>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <p className="sr-only" role="status">
+                  {drag ? `Перемещение: позиция ${drag.to + 1}` : ''}
+                </p>
                 {activeDay && (
                   <button
                     type="button"
@@ -593,7 +736,6 @@ export function ProgramEditor({
                 <p className="muted">
                   {dateLabel(start)} — {dateLabel(end)}
                 </p>
-                <p className="small muted">{zone}</p>
                 {days.map((day) => (
                   <section className="section" key={day.weekday}>
                     <h3>{weekdayNames[day.weekday - 1]}</h3>

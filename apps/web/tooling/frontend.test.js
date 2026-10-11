@@ -58,3 +58,52 @@ test('deep links roundtrip and impossible calendar dates are rejected', () => {
   assert.deepEqual(parseRoute('#/day?date=2026-02-30'), { view: 'today' });
   assert.deepEqual(parseRoute('#/unknown'), { view: 'today' });
 });
+
+test('loading waits for both the request and minimum display interval', async () => {
+  const { withMinimumLoading, minimumLoadingMs } =
+    await import('../src/shared/lib/loading.ts');
+  const { mock } = await import('node:test');
+  mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const controller = new AbortController();
+    let displayed = false;
+    const fast = withMinimumLoading(
+      Promise.resolve('ready'),
+      controller.signal,
+    ).then((value) => {
+      displayed = true;
+      return value;
+    });
+    await Promise.resolve();
+    mock.timers.tick(minimumLoadingMs - 1);
+    await Promise.resolve();
+    assert.equal(displayed, false);
+    mock.timers.tick(1);
+    assert.equal(await fast, 'ready');
+    let complete;
+    const slow = withMinimumLoading(
+      new Promise((resolve) => {
+        complete = resolve;
+      }),
+      controller.signal,
+    );
+    mock.timers.tick(minimumLoadingMs);
+    complete('later');
+    assert.equal(await slow, 'later');
+    const failure = new Error('offline');
+    const failed = withMinimumLoading(
+      Promise.reject(failure),
+      controller.signal,
+    );
+    mock.timers.tick(minimumLoadingMs);
+    await assert.rejects(failed, (error) => error === failure);
+    const aborted = withMinimumLoading(
+      Promise.resolve('departed'),
+      controller.signal,
+    );
+    controller.abort();
+    assert.equal(await aborted, 'departed');
+  } finally {
+    mock.timers.reset();
+  }
+});

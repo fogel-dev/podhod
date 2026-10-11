@@ -30,7 +30,11 @@ export function DayPage({
     <>
       <PageTitle title={dateLabel(date)} subtitle="Дневник" />
       {!resource.data ? (
-        <ResourceState error={resource.error} retry={resource.reload} />
+        <ResourceState
+          layout="day"
+          error={resource.error}
+          retry={resource.reload}
+        />
       ) : (
         <>
           {resource.data.plans.map((plan) => (
@@ -84,6 +88,7 @@ export function DayPage({
             timezone={session.user.timezone}
             context={session}
             initial={resource.data.bodyWeight}
+            suggestion={resource.data.bodyWeightSuggestion ?? null}
             onChanged={() => {
               resource.reload();
               onChanged();

@@ -30,13 +30,14 @@ type Plan struct {
 	Status            string `json:"status"`
 }
 type Day struct {
-	BodyWeight *BodyWeight        `json:"bodyWeight"`
-	Date       string             `json:"date"`
-	Plans      []Plan             `json:"plans"`
-	Workouts   []workouts.Workout `json:"workouts"`
-	Note       *Note              `json:"note"`
-	Notes      []Note             `json:"notes"`
-	Photos     media.Page         `json:"photos"`
+	BodyWeightSuggestion *BodyWeight        `json:"bodyWeightSuggestion"`
+	BodyWeight           *BodyWeight        `json:"bodyWeight"`
+	Date                 string             `json:"date"`
+	Plans                []Plan             `json:"plans"`
+	Workouts             []workouts.Workout `json:"workouts"`
+	Note                 *Note              `json:"note"`
+	Notes                []Note             `json:"notes"`
+	Photos               media.Page         `json:"photos"`
 }
 type CalendarDay struct {
 	Date              string             `json:"date"`
@@ -182,6 +183,15 @@ func loadDay(ctx context.Context, db programs.DB, user, date string) (Day, error
 		err = nil
 	} else if err == nil {
 		day.BodyWeight = &weight
+	}
+	if err != nil {
+		return day, err
+	}
+	previous, err := scanWeight(db.QueryRow(ctx, `SELECT `+weightColumns+` FROM body_weights WHERE user_id=$1 AND local_date<$2::date ORDER BY local_date DESC LIMIT 1`, user, date))
+	if errors.Is(err, pgx.ErrNoRows) {
+		err = nil
+	} else if err == nil {
+		day.BodyWeightSuggestion = &previous
 	}
 	return day, err
 }

@@ -3,6 +3,8 @@ import { AccessPage } from '@/pages/access';
 import { TrainingApp } from './training-app';
 import { getSession } from '@/entities/user';
 import type { Session } from '@/entities/user';
+import { Skeleton } from '@/shared/ui/kit';
+import { withMinimumLoading } from '@/shared/lib/loading';
 import { ApiError } from '@/shared/api';
 
 export function App() {
@@ -12,8 +14,10 @@ export function App() {
     [retry, setRetry] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    void getSession(controller.signal)
-      .then(setSession)
+    void withMinimumLoading(getSession(controller.signal), controller.signal)
+      .then((value) => {
+        if (!controller.signal.aborted) setSession(value);
+      })
       .catch((failure: unknown) => {
         if (controller.signal.aborted) return;
         if (failure instanceof ApiError && failure.status === 401)
@@ -39,8 +43,8 @@ export function App() {
   }
   if (loading)
     return (
-      <main className="connection-state" role="status">
-        Подключаемся…
+      <main className="connection-state">
+        <Skeleton layout="access" />
       </main>
     );
   if (error)

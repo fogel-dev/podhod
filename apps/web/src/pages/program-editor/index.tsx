@@ -24,7 +24,11 @@ export function ProgramEditorPage({
     <>
       <PageTitle title={id ? 'Изменить программу' : 'Новая программа'} />
       {resource.data === undefined ? (
-        <ResourceState error={resource.error} retry={resource.reload} />
+        <ResourceState
+          layout="editor"
+          error={resource.error}
+          retry={resource.reload}
+        />
       ) : (
         <ProgramEditor
           context={session}

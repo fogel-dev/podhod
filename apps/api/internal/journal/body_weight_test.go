@@ -86,3 +86,49 @@ func TestBodyWeightUsesUserTimezone(t *testing.T) {
 		domaintest.Status(t, app.Write(a, "PUT", "/api/v1/days/"+date+"/body-weight", map[string]any{"weightKg": "75.5"}, 0), 200)
 	}
 }
+
+func TestBodyWeightSuggestionIsPreviousPrivateMeasurement(t *testing.T) {
+	app := domaintest.New(t)
+	(&Service{Core: app.Core, Auth: app.Auth}).RegisterRoutes(app.Mux)
+	a, b := app.User(t, "suggestion"), app.User(t, "foreign")
+	date := programs.Today(a.Session.User.Timezone)
+	parsed, _ := time.Parse("2006-01-02", date)
+	old := parsed.AddDate(0, 0, -4).Format("2006-01-02")
+	earlier := parsed.AddDate(0, 0, -7).Format("2006-01-02")
+	for _, row := range []struct{ user, date, weight string }{{a.Session.User.ID, earlier, "95"}, {a.Session.User.ID, old, "97"}, {b.Session.User.ID, old, "70"}} {
+		if _, err := app.Core.Pool.Exec(context.Background(), `INSERT INTO body_weights(user_id,local_date,weight_kg) VALUES($1,$2,$3)`, row.user, row.date, row.weight); err != nil {
+			t.Fatal(err)
+		}
+	}
+	read := func(date string) Day {
+		var day Day
+		domaintest.Decode(t, app.Request(a, "GET", "/api/v1/days/"+date, nil, "", ""), &day)
+		return day
+	}
+	day := read(date)
+	if day.BodyWeight != nil || day.BodyWeightSuggestion == nil || day.BodyWeightSuggestion.WeightKg != "97.00" || day.BodyWeightSuggestion.LocalDate != old {
+		t.Fatal(day)
+	}
+	// Reading a future day does not create measurements or look past its date.
+	day = read(parsed.AddDate(0, 0, 2).Format("2006-01-02"))
+	if day.BodyWeight != nil || day.BodyWeightSuggestion == nil || day.BodyWeightSuggestion.WeightKg != "97.00" {
+		t.Fatal(day)
+	}
+	day = read(old)
+	if day.BodyWeight.WeightKg != "97.00" || day.BodyWeightSuggestion.WeightKg != "95.00" {
+		t.Fatal(day)
+	}
+	day = read(earlier)
+	if day.BodyWeightSuggestion != nil {
+		t.Fatal("future value leaked into earlier date")
+	}
+	domaintest.Status(t, app.Write(a, "PUT", "/api/v1/days/"+date+"/body-weight", map[string]any{"weightKg": "97"}, 0), 200)
+	day = read(date)
+	if day.BodyWeight == nil || day.BodyWeight.Version != 1 || day.BodyWeightSuggestion.LocalDate != old {
+		t.Fatal(day)
+	}
+	var count int
+	if err := app.Core.Pool.QueryRow(context.Background(), `SELECT count(*) FROM body_weights WHERE user_id=$1`, a.Session.User.ID).Scan(&count); err != nil || count != 3 {
+		t.Fatal(count, err)
+	}
+}

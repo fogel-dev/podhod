@@ -30,6 +30,10 @@ export function WorkoutPage({
       onChanged={onChanged}
     />
   ) : (
-    <ResourceState error={resource.error} retry={resource.reload} />
+    <ResourceState
+      layout="workout"
+      error={resource.error}
+      retry={resource.reload}
+    />
   );
 }

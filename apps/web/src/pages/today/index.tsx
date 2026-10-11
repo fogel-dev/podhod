@@ -32,26 +32,41 @@ export function TodayPage({
     <>
       <PageTitle title="Сегодня" subtitle={dateLabel(date)} />
       {!resource.data ? (
-        <ResourceState error={resource.error} retry={resource.reload} />
+        <ResourceState
+          layout="today"
+          error={resource.error}
+          retry={resource.reload}
+        />
       ) : (
-        <section className="surface training-card">
+        <section
+          className={`surface training-card ${!workout && !resource.data.plans.some((p) => p.status === 'planned') ? 'recovery-card' : ''}`}
+        >
           <p className="eyebrow">
             {resource.data.workouts.some((w) => w.status === 'completed')
               ? 'Тренировка сохранена'
               : resource.data.plans.some((p) => p.status === 'planned')
                 ? 'Ваша тренировка'
-                : 'День восстановления'}
+                : 'Сегодня'}
           </p>
           <h2>
             {resource.data.plans.some((p) => p.status === 'planned')
               ? 'Всё готово к тренировке'
-              : 'Ваш личный дневник'}
+              : workout
+                ? workout.status === 'active'
+                  ? 'Тренировка продолжается'
+                  : 'Результат тренировки'
+                : 'День восстановления'}
           </h2>
-          <p className="muted small">
-            {resource.data.plans.length
-              ? resource.data.plans.map((p) => planStatus[p.status]).join(' · ')
-              : 'Планы, результаты и заметки — в календаре.'}
-          </p>
+          {(workout ||
+            resource.data.plans.some((p) => p.status === 'planned')) && (
+            <p className="muted small">
+              {resource.data.plans.length
+                ? resource.data.plans
+                    .map((p) => planStatus[p.status])
+                    .join(' · ')
+                : 'Планы, результаты и заметки — в календаре.'}
+            </p>
+          )}
           <button
             className="primary"
             onClick={() =>
