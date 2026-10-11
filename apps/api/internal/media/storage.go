@@ -2,6 +2,7 @@ package media
 
 import (
 	"errors"
+	"fmt"
 	"github.com/fogel-dev/podhod/apps/api/internal/id"
 	"io"
 	"os"
@@ -30,7 +31,29 @@ func NewDisk(dir string) (*Disk, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err = checkWritable(root); err != nil {
+		root.Close()
+		return nil, fmt.Errorf("MEDIA_DIR must be writable by the application user: %w", err)
+	}
 	return &Disk{root}, nil
+}
+
+// Check the same create/rename/remove operations used by uploads before serving requests.
+func checkWritable(root *os.Root) error {
+	name, renamed := id.New()+".tmp", id.New()+".tmp"
+	f, err := root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return err
+	}
+	defer root.Remove(name)
+	defer root.Remove(renamed)
+	if err = f.Close(); err != nil {
+		return err
+	}
+	if err = root.Rename(name, renamed); err != nil {
+		return err
+	}
+	return root.Remove(renamed)
 }
 func key() string { return id.New() + ".bin" }
 func (d *Disk) Put(name string, data []byte) error {
